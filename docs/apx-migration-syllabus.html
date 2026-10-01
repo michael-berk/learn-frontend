@@ -156,7 +156,7 @@
   <h2>Syllabus at a glance</h2>
   <div class="scroll"><table>
     <tr><th>Wk</th><th>Project</th><th>New skill (for you)</th><th>Hours bias</th></tr>
-    <tr><td>1</td><td>Tic-Tac-Toe</td><td>React mental model + styling system</td><td>heavy frontend</td></tr>
+    <tr><td>1</td><td>Tic-Tac-Toe (N×N, K-in-a-row)</td><td>React mental model + O(K) win-check + 10k-cell render perf</td><td>heavy frontend</td></tr>
     <tr><td>2</td><td>Connect Four</td><td>Reconciliation, re-renders, refs, a11y</td><td>heavy frontend</td></tr>
     <tr><td>3</td><td>Wordle</td><td>Hono (new syntax) + data fetching lifecycle</td><td>light backend / med frontend</td></tr>
     <tr><td>4</td><td>Leaderboard</td><td>Server-state cache, forms, async UI states</td><td>med frontend</td></tr>
@@ -168,29 +168,32 @@
   <h2>Weeks</h2>
 
   <!-- ================= WEEK 1 ================= -->
-  <h3><span class="wknum">Week 1</span>Tic-Tac-Toe</h3>
-  <p class="focus">The React mental model and the styling system. The whole point is unlearning imperative/stateful habits.</p>
+  <h3><span class="wknum">Week 1</span>Generalized Tic-Tac-Toe (N×N, K-in-a-row)</h3>
+  <p class="focus">The React mental model + the first real algorithm/perf lesson. A parametrized board forces you to separate <em>what to compute</em> from <em>how little to re-render</em>.</p>
 
   <h4>Tangible outcome</h4>
-  <p>A styled, playable tic-tac-toe — the first page of your capstone repo — built the idiomatic React way, not as a DOM-mutation script.</p>
+  <p>A tic-tac-toe generalized to a mutable <b>N×N board</b> with a mutable <b>K-in-a-row</b> win condition — playable at 3×3/3 and at <b>100×100 with 10-in-a-row</b> without lag. Built the idiomatic React way, as the first page of your capstone repo.</p>
 
   <h4>Learning outcomes</h4>
   <div class="pill-row">
     <span class="pill">render-as-function-of-state</span><span class="pill">one-way data flow</span><span class="pill">derived vs stored state</span>
-    <span class="pill">immutability</span><span class="pill">JSX</span><span class="pill">composition / children</span><span class="pill">compound components</span>
+    <span class="pill">immutability</span><span class="pill">O(K) incremental win-check</span><span class="pill">last-move-only logic</span>
+    <span class="pill">10k-cell render perf</span><span class="pill">memo / key discipline</span><span class="pill">composition / children</span>
     <span class="pill">controlled vs uncontrolled</span><span class="pill">Tailwind</span><span class="pill">shadcn + cn()</span>
   </div>
-  <div class="known">Assumed known, not taught: components as functions, props as arguments, event handling, data structures. The new ideas: you describe UI as a pure function of state and never touch the DOM yourself; you compose UI by passing <code>children</code> and slots rather than configuring via flags; and <em>who owns a value's state — React or the DOM</em> (controlled vs. uncontrolled) is a deliberate choice, not a default.</div>
+  <div class="known">Assumed known, not taught: components, props, events, data structures, and that an O(N²) full-board rescan per move is the wrong answer — you already think in complexity. The new ideas: UI as a pure function of state with no DOM writes; composition via <code>children</code>; controlled vs. uncontrolled as a choice; and — the frontend-specific twist — that a correct O(K) algorithm still janks if it triggers 10,000 component re-renders, so <em>compute cost and render cost are two separate budgets</em>.</div>
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>The entire board is a function of one state value — you never imperatively update a cell.</li>
-    <li>Whose-turn and the winner are never stored; they fall out of the state.</li>
-    <li>Resetting is a state change, not DOM surgery.</li>
-    <li>It looks intentional, using the real component system rather than raw HTML.</li>
+    <li>Board size and win-length are parameters; 3×3/3 and 100×100/10 are the same code with different inputs.</li>
+    <li>Placing a stone feels instant at 100×100 — no visible delay between click and update.</li>
+    <li>The win check does <em>not</em> rescan the board; its cost depends on K and not on N.</li>
+    <li>Only the cells that changed re-render — not all 10,000 — and you can prove it in the Profiler.</li>
+    <li>The entire board is a function of state; whose-turn and winner are derived, never stored; reset is a state change.</li>
   </ul></div>
-  <p class="must">Must use to learn: a single <code>useState</code> for the board; the winner/turn computed on each render; a new array on every move (no mutation); shadcn <code>Button</code>/<code>Dialog</code> styled through <code>cn()</code>/<code>tailwind-merge</code>. Build a reusable <code>&lt;Cell&gt;</code> that takes <code>children</code>, and use the <code>Dialog</code> as the compound component it is (<code>DialogTrigger</code>/<code>DialogContent</code>) rather than a boolean-driven modal.</p>
-  <p class="must">▸ TS challenge: model the game result as a discriminated union (<code>{status:'playing'} | {status:'won', winner:'X'|'O'} | {status:'draw'}</code>) so the UI can't read <code>winner</code> in a state where it doesn't exist. Use <code>as const</code> on the cell values so <code>'X'|'O'|null</code> is inferred, not widened to <code>string</code>.</p>
+  <p class="must">Must use to learn: board state as a flat <code>Map</code>/array keyed by index (not a 100×100 nested array you clone whole); a win check that, from the <b>just-placed cell</b>, counts outward along the 4 axes (—, |, ╲, ╱) until the run breaks — <b>O(K) per move, independent of N</b>; derived turn/winner; a memoized <code>&lt;Cell&gt;</code> (<code>React.memo</code>) with a stable <code>key</code> and a stable <code>onClick</code> so unchanged cells skip re-render; shadcn <code>Dialog</code> (compound) for the win banner; number inputs for N and K.</p>
+  <p class="must">▸ Algorithm note (the core lesson): the naive win check is O(N²) per move — fine at 3×3, fatal at 100×100 (10k cells × every move). The move only changes outcomes on the 4 lines through it, so check only those: walk each direction counting same-colour stones until you hit a gap, sum the two arms + 1, compare to K. That's ~4·K reads. Separately, the <em>render</em> must stay cheap: a cloned 100×100 array per move + 10k un-memoized cells will jank even with an O(K) check — this is where you learn compute vs. render are different budgets.</p>
+  <p class="must">▸ TS challenge: model the result as a discriminated union (<code>{status:'playing'} | {status:'won', winner:Player, line:Coord[]} | {status:'draw'}</code>) so the UI can't read <code>winner</code>/<code>line</code> unless the game is won. <code>as const</code> the players so <code>'X'|'O'</code> is inferred, not widened to <code>string</code>. Make N and K typed inputs with a validated minimum (K ≤ N).</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
@@ -199,13 +202,14 @@
 
   <h4 class="test">Test — frontend judgment (new material only)</h4>
   <ol>
-    <li>You mutate the board array in place and call <code>setState</code> with it. The UI doesn't update. Why — and what's the model being violated?</li>
-    <li>Why is "whose turn" derived state and not its own <code>useState</code>? What class of bug does storing it invite?</li>
-    <li>In React you never write to the DOM directly. What is the framework actually doing on your behalf, and why does that constraint exist?</li>
-    <li>When would <code>cn()</code> / <code>tailwind-merge</code> change the output versus a plain template string of classes?</li>
-    <li>You want a win modal. Why reach for a shadcn <code>Dialog</code> (focus trap, portal, escape) instead of a conditionally-rendered styled div?</li>
-    <li>A compound component (<code>&lt;Dialog&gt;&lt;DialogTrigger/&gt;&lt;DialogContent/&gt;&lt;/Dialog&gt;</code>) vs. one that takes a dozen boolean/render props — what does the composition style buy the caller?</li>
-    <li>Give one value in this game you'd keep uncontrolled (DOM-owned) and one you'd control in React. What's the deciding question?</li>
+    <li>Your win check is a correct O(K), but the 100×100 board still janks on every click. Name the two most likely render-side causes and the fix for each.</li>
+    <li>Why does checking only the 4 lines through the last-placed cell give the right answer, and when would that logic miss a win? (Think about whose move it is.)</li>
+    <li>You store the board as a nested 100×100 array and clone it on each move for immutability. What's the cost, and what data shape makes the immutable update cheap?</li>
+    <li>A single stone placed — which cells should re-render, and how do <code>React.memo</code> + a stable <code>key</code> + a stable <code>onClick</code> each contribute to limiting it?</li>
+    <li>You mutate the board in place and call <code>setState</code>; the UI doesn't update. What model did you violate, and why does React require a new reference?</li>
+    <li>Whose-turn and the winning line are both derivable from state. Why derive rather than store, and what bug does storing invite when N and K change mid-session?</li>
+    <li>Give one value here you'd keep uncontrolled (DOM-owned) and one you'd control in React. What's the deciding question?</li>
+    <li>Why reach for a shadcn <code>Dialog</code> (focus trap, portal, escape) over a conditionally-rendered styled div for the win banner?</li>
   </ol>
 
   <hr class="divider">

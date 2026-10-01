@@ -137,8 +137,16 @@
   <h1>fde-one apx migration syllabus</h1>
   <p class="sub">60 hours over 6 weeks. Calibrated for a senior backend/AI engineer: it skips what you already own (API design, SQL/<code>pg</code>, auth, concurrency, deploy, testing discipline) and concentrates on what's genuinely new — the React rendering model, CSS and layout, design systems, and shipping polished production frontends. Games are the forcing function; the matching fde-one refactor runs alongside.</p>
 
+  <div class="callout" style="border-left:3px solid var(--accent)">
+    <b>The north star — hold this and everything else follows.</b> The one thing that separates great React engineers from competent ones isn't a library; it's a mental model: <b>render is a pure function of state</b>, and <code>useEffect</code> exists only to synchronize with systems <em>outside</em> React. The two habits that fall out of it are what every game drills — <b>derive, don't store</b> (compute values during render instead of mirroring them into state via an effect) and <b>colocate, don't lift</b> (keep state in the lowest component that needs it; reach for Context or a store only on real sharing). As a backend engineer your instinct will be to reach for an effect to "do work" — that instinct is the single most common senior-backend-to-React bug. If a game's rule here ever feels arbitrary, trace it back to this.
+  </div>
+
   <div class="callout">
     <b>Backend stack: Hono first, then AppKit.</b> Weeks 3–5 build the game backends on <b>Hono</b> — a thin router that leaves the request lifecycle, middleware, and typed client visible, so you learn the primitives bare. Week 6 migrates a game to <b>AppKit</b> (<code>@databricks/appkit</code>), Databricks' first-party SDK, so you can see exactly what a framework abstracts once you've done it by hand. fde-one's real end state is <b>AppKit</b> — officially supported, not a bespoke stack. The Hono work on fde-one in weeks 3–5 is a deliberate learning rehearsal of the API shape before the AppKit cutover.
+  </div>
+
+  <div class="callout">
+    <b>TypeScript depth is woven in, not drilled.</b> You know types from Python, so there are no type-theory exercises — but "really good at TS" means the half you don't have yet: making <b>illegal states impossible to compile</b>. Each game carries one applied TS challenge (a <span style="white-space:nowrap">▸ TS</span> line in its must-use) building toward that — discriminated unions for game state, generics for reusable components, inference for the typed client. It pays off directly in your AI work: the same techniques type LLM tool-call schemas, agent state machines, and structured outputs.
   </div>
 
   <div class="callout">
@@ -182,6 +190,7 @@
     <li>It looks intentional, using the real component system rather than raw HTML.</li>
   </ul></div>
   <p class="must">Must use to learn: a single <code>useState</code> for the board; the winner/turn computed on each render; a new array on every move (no mutation); shadcn <code>Button</code>/<code>Dialog</code> styled through <code>cn()</code>/<code>tailwind-merge</code>. Build a reusable <code>&lt;Cell&gt;</code> that takes <code>children</code>, and use the <code>Dialog</code> as the compound component it is (<code>DialogTrigger</code>/<code>DialogContent</code>) rather than a boolean-driven modal.</p>
+  <p class="must">▸ TS challenge: model the game result as a discriminated union (<code>{status:'playing'} | {status:'won', winner:'X'|'O'} | {status:'draw'}</code>) so the UI can't read <code>winner</code> in a state where it doesn't exist. Use <code>as const</code> on the cell values so <code>'X'|'O'|null</code> is inferred, not widened to <code>string</code>.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
@@ -227,6 +236,8 @@
     <li>Fully operable and announced by keyboard and screen reader; routed via URL.</li>
   </ul></div>
   <p class="must">Must use to learn: a deliberate <code>useMemo</code>/<code>useCallback</code> you can prove earns its place; a <code>useRef</code> for an imperative task (focus or measure); an effect with cleanup for the drop animation; a <strong>Context provider</strong> for theme or current-player (observe which consumers re-render); at least one place you deliberately <em>avoid</em> an effect by deriving state or using an event handler; TanStack Router for menu → game; ARIA roles + keyboard handlers on the grid, with the win popup rendered through a <strong>portal</strong>.</p>
+  <p class="must">▸ TS challenge: write a generic <code>&lt;Grid&lt;T&gt;&gt;</code> (or <code>useGrid&lt;T&gt;</code>) that works for any cell type, so Connect Four and tic-tac-toe share it with no <code>any</code>. The compiler should infer the cell type from the data you pass in.</p>
+  <p class="must">▸ Modern-React note: React 19's <strong>Compiler</strong> auto-memoizes, which is making hand-written <code>useMemo</code>/<code>useCallback</code> largely unnecessary in new code. Do them by hand here to learn <em>why</em> they exist and when they help — then note that the Compiler is the direction of travel, so you reach for them deliberately, not reflexively.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
@@ -273,6 +284,7 @@
     <li>The word list is data, static-site-ready for week 6.</li>
   </ul></div>
   <p class="must">Must use to learn (frontend side): TanStack Query for the guess call, surfacing its loading/error/data states in the UI. The Hono API itself is a translation exercise, not a lesson.</p>
+  <p class="must">▸ TS challenge: define the guess-response type once on the server and have the client <em>infer</em> it (Hono's typed client / <code>z.infer</code> from the Zod schema) — no hand-written client type, no drift. This is the exact pattern you'll use to type an LLM's structured output or a tool-call result.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
@@ -312,6 +324,8 @@
     <li>A render-time error in one widget doesn't blank the page; the rest keeps working.</li>
   </ul></div>
   <p class="must">Must use to learn: <code>useQuery</code> + <code>useMutation</code> with explicit cache keys and invalidation; one optimistic update with rollback; a <strong>custom hook</strong> (e.g. <code>useLeaderboard()</code>) that encapsulates the query + mutation and returns a clean API; a <code>react-hook-form</code> form (notice the uncontrolled design and why); a <strong>Suspense boundary and an error boundary scoped to one panel</strong> so its loading/failure is isolated; a shared Hono RPC type.</p>
+  <p class="must">▸ Modern-React note: React 19 added <strong>Actions</strong> and the hooks that formalize exactly what you're hand-building this week — <code>useOptimistic</code> (optimistic state + rollback), <code>useActionState</code> and <code>&lt;form action&gt;</code> (pending/error plumbing), and <code>use()</code> (read a promise or context in render). Build the leaderboard once the manual way to understand the lifecycle, then re-implement the optimistic update with <code>useOptimistic</code> and compare. Knowing both is the point — fde-one and AppKit may use either.</p>
+  <p class="must">▸ TS challenge: type the custom hook's return as a discriminated union on status (<code>loading | error | ready</code>) so a caller can't read <code>data</code> before it exists — the compiler forces the loading/error branches.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
@@ -425,14 +439,24 @@
     <li><b>Static site (optional):</b> collect the games on GitHub Pages via Actions; backend games run client-only (bundled words, <code>localStorage</code>). A portfolio nice-to-have, not a learning goal.</li>
   </ul>
 
-  <h2>Appendix — TypeScript-in-React surface</h2>
-  <p>You know TS; these are the React-specific patterns that still catch strong engineers. Reference them as you hit them, not as a lesson:</p>
+  <h2>TypeScript depth track (woven through the games)</h2>
+  <p>The <span style="white-space:nowrap">▸ TS</span> lines above are the applied version of this. The goal across the six weeks is to go from "typed Python" to <b>making illegal states impossible to compile</b> — the half of TS fluency that's genuinely new, and the one that pays off most in AI tooling (typing tool-call schemas, agent state, structured outputs). What each game drills:</p>
   <ul>
-    <li>Typing props with <code>children</code>: <code>ReactNode</code> vs. <code>ReactElement</code> vs. a render-prop function.</li>
-    <li>Event types (<code>React.MouseEvent&lt;HTMLButtonElement&gt;</code>, <code>ChangeEvent</code>, <code>FormEvent</code>) and why the generic matters.</li>
-    <li>Generic components (a typed <code>&lt;List&lt;T&gt;&gt;</code>), and discriminated-union props for mutually-exclusive variants.</li>
-    <li><code>forwardRef</code> + typing the forwarded ref — needed to build reusable inputs/buttons that compose with Radix.</li>
-    <li>Typing custom hooks' return values (tuples with <code>as const</code> vs. objects) and context values (and the "undefined until provided" guard).</li>
+    <li><b>W1 — discriminated unions + <code>as const</code>:</b> game-result union; literal inference instead of widening.</li>
+    <li><b>W2 — generics + inference:</b> a reusable <code>&lt;Grid&lt;T&gt;&gt;</code> that infers its cell type.</li>
+    <li><b>W3 — inference across a boundary:</b> client infers the server's response type (<code>z.infer</code> / typed client), no hand-written types.</li>
+    <li><b>W4 — unions for async state:</b> a hook whose return type forces the caller to handle loading/error before <code>data</code>.</li>
+    <li><b>React-specific surface, as you hit it:</b> <code>ReactNode</code> vs <code>ReactElement</code>; event generics (<code>MouseEvent&lt;HTMLButtonElement&gt;</code>); <code>forwardRef</code> typing for Radix-composable inputs; <code>satisfies</code> to keep literal types without widening; the "context is undefined until provided" guard.</li>
+    <li><b>If you want pure reps:</b> the <code>type-challenges</code> repo (GitHub) — do the easy + medium tiers; they cover <code>infer</code>, conditional/mapped types, template literals. ~8 hrs, optional, outside the games.</li>
+  </ul>
+
+  <h2>Modern React (React 19) — so you learn current, not 2023</h2>
+  <p>The games teach the fundamentals by hand first (that's how you understand them), but know where React has moved so you reach for the modern primitive deliberately. Called out in W2 and W4; collected here:</p>
+  <ul>
+    <li><b>React Compiler:</b> build-time auto-memoization. Increasingly makes manual <code>useMemo</code>/<code>useCallback</code> unnecessary — learn them to understand the model, then lean on the compiler.</li>
+    <li><b>Actions + <code>useActionState</code> / <code>useOptimistic</code> / <code>useFormStatus</code> + <code>&lt;form action&gt;</code>:</b> first-class pending/optimistic/error handling for mutations and forms. Replaces much of the manual plumbing you build in W4.</li>
+    <li><b><code>use()</code>:</b> read a promise (Suspense-aware) or context during render. Note the caveat: the promise must come from a Suspense-compatible cache, not one created in render.</li>
+    <li><b>Server Components / Server Actions:</b> know conceptually what they are and the server/client boundary — but <b>out of scope to build</b>, since Databricks Apps serves a static SPA + API. This is the main place to ignore the generic "learn Next.js/RSC" advice.</li>
   </ul>
 
   <h2>Appendix — state libraries (know they exist, know why we skip them)</h2>

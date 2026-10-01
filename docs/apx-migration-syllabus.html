@@ -1,0 +1,446 @@
+<title>apx Migration Syllabus</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #6a6a6a;
+    --line: #e2e2e2;
+    --line-strong: #bfbfbf;
+    --code-bg: #f1f1f1;
+    --panel: #f7f7f7;
+    --accent: #0b5fff;
+    --learn: #0a7d4a;
+    --ship: #9a5500;
+    --test: #5b3fb5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141414;
+      --fg: #e8e8e8;
+      --muted: #9c9c9c;
+      --line: #2e2e2e;
+      --line-strong: #484848;
+      --code-bg: #202020;
+      --panel: #1c1c1c;
+      --accent: #6ea8ff;
+      --learn: #4fc98a;
+      --ship: #d9a24a;
+      --test: #a992f0;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141414;
+    --fg: #e8e8e8;
+    --muted: #9c9c9c;
+    --line: #2e2e2e;
+    --line-strong: #484848;
+    --code-bg: #202020;
+    --panel: #1c1c1c;
+    --accent: #6ea8ff;
+    --learn: #4fc98a;
+    --ship: #d9a24a;
+    --test: #a992f0;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 760px;
+    margin-inline: auto;
+    padding-inline: 18px;
+    padding-block: 36px 72px;
+  }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: .85em;
+    background: var(--code-bg);
+    padding: .1em .35em;
+    border-radius: 3px;
+  }
+  a { color: inherit; }
+  p { margin: 0 0 12px; }
+
+  /* Heading hierarchy reads by SIZE and COLOR:
+     h1 2.1rem ink · h2 1.6rem accent · h3 1.3rem ship · h4 1.05rem (role color) */
+  h1 {
+    font-size: 2.1rem;
+    line-height: 1.15;
+    margin: 0 0 6px;
+    color: var(--fg);
+  }
+  .sub { color: var(--muted); margin: 0 0 10px; max-width: 64ch; }
+
+  h2 {
+    font-size: 1.6rem;
+    margin: 50px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--line-strong);
+    color: var(--accent);
+  }
+
+  /* week heading */
+  h3 {
+    font-size: 1.3rem;
+    margin: 42px 0 2px;
+    padding-top: 10px;
+    color: var(--ship);
+  }
+  h3 .wknum { color: var(--muted); font-weight: 600; font-size: .85rem; display: block; letter-spacing: .04em; text-transform: uppercase; }
+  .focus { color: var(--muted); font-size: .92rem; margin: 2px 0 16px; }
+
+  /* field label (Tangible outcome / Learning outcomes / etc.) — bigger + colored by role */
+  h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    margin: 20px 0 5px;
+    color: var(--fg);
+  }
+  h4.learn { color: var(--learn); }
+  h4.ship { color: var(--ship); }
+  h4.test { color: var(--test); }
+
+  ul, ol { margin: 4px 0 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; }
+  .pill {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: .78rem;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  .criteria {
+    background: var(--panel);
+    border-left: 3px solid var(--learn);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    margin: 4px 0 0;
+  }
+  .criteria ul { margin: 0; }
+
+  .test ol { counter-reset: q; }
+
+  /* tables */
+  .scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6px 0 14px;
+    font-size: .95rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+  }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+
+  .divider { height: 1px; background: var(--line); border: 0; margin: 36px 0 0; }
+</style>
+
+<div class="wrap">
+
+  <h1>fde-one apx migration syllabus</h1>
+  <p class="sub">60 hours over 6 weeks. Each week ships one playable game that teaches a skill fde-one uses, plus a matching refactor task in fde-one. The games assemble into a static GitHub Pages site. The Databricks data layer stays.</p>
+
+  <h2>Syllabus at a glance</h2>
+  <div class="scroll"><table>
+    <tr><th>Wk</th><th>Project</th><th>Core skill</th><th>You will have built</th></tr>
+    <tr><td>1</td><td>Tic-Tac-Toe</td><td>React + styling</td><td>A styled, interactive board</td></tr>
+    <tr><td>2</td><td>Connect Four</td><td>Routing + a11y</td><td>A routed, keyboard-playable game</td></tr>
+    <tr><td>3</td><td>Wordle</td><td>Hono + Lakebase backend</td><td>A game with a real API + DB</td></tr>
+    <tr><td>4</td><td>Wordle Leaderboard</td><td>Typed client + forms</td><td>Writes, a leaderboard, a validated form</td></tr>
+    <tr><td>5</td><td>Stats + deploy</td><td>Charts + build/deploy</td><td>A dashboard deployed to Databricks Apps</td></tr>
+    <tr><td>6</td><td>Static site</td><td>Testing + GitHub Pages</td><td>A live portfolio site of the games</td></tr>
+  </table></div>
+  <p>Removing apx retires five couplings: the dev loop, the generated OpenAPI client (<code>lib/api.ts</code>), <code>_metadata.py</code>, the shadcn registries, and the apx MCP tools. Config is only <code>[tool.apx.*]</code> in <code>pyproject.toml</code>; the rest is behavior each week replaces.</p>
+
+  <h2>Weeks</h2>
+
+  <!-- ================= WEEK 1 ================= -->
+  <h3><span class="wknum">Week 1</span>Tic-Tac-Toe</h3>
+  <p class="focus">React fundamentals and fde-one's styling model. No backend.</p>
+
+  <h4>Tangible outcome</h4>
+  <p>A tic-tac-toe game you can play in the browser, styled with the same component system fde-one uses. It is the first page of your capstone repo.</p>
+
+  <h4>Learning outcomes</h4>
+  <div class="pill-row">
+    <span class="pill">components</span><span class="pill">props</span><span class="pill">useState</span>
+    <span class="pill">event handlers</span><span class="pill">derived state</span><span class="pill">conditional render</span>
+    <span class="pill">list keys</span><span class="pill">Tailwind + shadcn</span><span class="pill">TS props/events</span>
+  </div>
+
+  <h4 class="learn">Game — success criteria</h4>
+  <div class="criteria"><ul>
+    <li>Two players can take turns and the game knows whose turn it is.</li>
+    <li>The game detects a win or a draw and makes the result obvious.</li>
+    <li>A finished game can be started over without reloading the page.</li>
+    <li>It looks intentional, not like unstyled HTML.</li>
+  </ul></div>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a <code>Square</code> child component driven by <code>props</code>; board state in a single <code>useState</code>; the winner computed from state, not stored separately; shadcn <code>Button</code>/<code>Dialog</code> styled with <code>cn()</code>.</p>
+
+  <h4 class="ship">FDE One — refactor</h4>
+  <ul>
+    <li>No code change yet. Map the apx surface: <code>grep apx</code>, inventory <code>_metadata.py</code> and <code>lib/api.ts</code>, annotate <code>tsconfig.json</code> / <code>biome.jsonc</code> / <code>vite.config.ts</code>.</li>
+    <li>Open the "apx removal" tracking issue listing the five couplings.</li>
+  </ul>
+
+  <h4 class="test">Test — when/how would you use…</h4>
+  <ol>
+    <li>You have one piece of data two components both need. Where does it live, and why not duplicate it?</li>
+    <li>Whose-turn and the winner can both be computed from the board. Why store neither in its own <code>useState</code>?</li>
+    <li>When is a value a prop versus state? Give a tic-tac-toe example of each.</li>
+    <li>You render the 9 squares with <code>.map()</code>. Why does each need a <code>key</code>, and what makes a good one here?</li>
+    <li>A click handler needs to know which square was clicked. How do you pass that without making 9 different functions by hand?</li>
+    <li>What goes wrong if you mutate the board array directly instead of making a new one?</li>
+    <li>When would you reach for <code>cn()</code> / <code>tailwind-merge</code> instead of a plain <code>className</code> string?</li>
+    <li>You want a "You won" popup. Why a shadcn <code>Dialog</code> rather than conditionally rendering a styled <code>div</code>?</li>
+  </ol>
+
+  <hr class="divider">
+
+  <!-- ================= WEEK 2 ================= -->
+  <h3><span class="wknum">Week 2</span>Connect Four</h3>
+  <p class="focus">Routing, larger state, and accessibility. No backend.</p>
+
+  <h4>Tangible outcome</h4>
+  <p>A Connect Four game that lives behind its own route (a menu links to it), is fully playable with the keyboard, and handles a 42-cell board.</p>
+
+  <h4>Learning outcomes</h4>
+  <div class="pill-row">
+    <span class="pill">TanStack Router</span><span class="pill">route params</span><span class="pill">2D state</span>
+    <span class="pill">lifting state</span><span class="pill">useEffect</span><span class="pill">cleanup</span>
+    <span class="pill">keyboard events</span><span class="pill">ARIA / focus</span><span class="pill">React DevTools</span>
+  </div>
+
+  <h4 class="learn">Game — success criteria</h4>
+  <div class="criteria"><ul>
+    <li>From a landing screen, a player can navigate to the game and back by URL.</li>
+    <li>Dropping a piece respects gravity, and the game detects four in a row in any direction.</li>
+    <li>Everything playable with a mouse is also playable with only the keyboard.</li>
+    <li>A screen reader can tell whose turn it is and the state of a column.</li>
+  </ul></div>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: two routes via TanStack Router; the board as a single lifted state object; a <code>useEffect</code> that does something real (e.g. a drop animation or AI delay) with a cleanup; keyboard handlers and ARIA roles on the grid.</p>
+
+  <h4 class="ship">FDE One — refactor</h4>
+  <ul>
+    <li>No code change. Trace one real route end to end: component → <code>useXSuspense</code> hook → <code>lib/api.ts</code> → FastAPI route.</li>
+    <li>Write up the <code>useXSuspense</code> / <code>selector()</code> pattern and how the TanStack Router tree is generated — you reproduce both later.</li>
+  </ul>
+
+  <h4 class="test">Test — when/how would you use…</h4>
+  <ol>
+    <li>When should two screens be two routes versus one component toggling state? What do you gain from routes?</li>
+    <li>You need the game to know which board to load from the URL. How do route params get there, and when do they change?</li>
+    <li>A column's win-check reads the whole board. Why keep the board in one state object rather than 7 column states?</li>
+    <li>Name a thing in this game that belongs in <code>useEffect</code> and a thing that does not. What's the test?</li>
+    <li>Your effect starts a timer. What breaks if you don't return a cleanup, and when does cleanup run?</li>
+    <li>The board re-renders on every move. How do you confirm in DevTools whether that's a problem?</li>
+    <li>How do you make a grid of divs operable and announced for keyboard and screen-reader users?</li>
+    <li>When is a dependency array wrong, and how do stale closures show up in gameplay?</li>
+  </ol>
+
+  <hr class="divider">
+
+  <!-- ================= WEEK 3 ================= -->
+  <h3><span class="wknum">Week 3</span>Wordle</h3>
+  <p class="focus">Your first Hono + Lakebase backend.</p>
+
+  <h4>Tangible outcome</h4>
+  <p>A Wordle game where the word and guess-scoring live on a Hono server backed by a Lakebase word table, so the answer can't be read from the browser.</p>
+
+  <h4>Learning outcomes</h4>
+  <div class="pill-row">
+    <span class="pill">Hono routes</span><span class="pill">middleware</span><span class="pill">Zod validation</span>
+    <span class="pill">pg / Lakebase</span><span class="pill">auth headers</span><span class="pill">fetch</span>
+    <span class="pill">TanStack Query</span><span class="pill">server vs client state</span>
+  </div>
+
+  <h4 class="learn">Game — success criteria</h4>
+  <div class="criteria"><ul>
+    <li>The client never knows the answer until the game is over.</li>
+    <li>A guess that isn't a real word is rejected before it counts.</li>
+    <li>Each guess comes back scored (right spot / wrong spot / absent) and the UI reflects it.</li>
+    <li>The word list is data, not hardcoded in a component.</li>
+  </ul></div>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a Hono API with <code>GET</code> + <code>POST</code> routes; Zod on the request body; a <code>pg</code> query against Lakebase; one piece of middleware (auth or logging); TanStack Query for the guess call. Keep a bundled word list too for week 6's static version.</p>
+
+  <h4 class="ship">FDE One — refactor</h4>
+  <ul>
+    <li>Reimplement fde-one's simplest read-only router in Hono, mirroring <code>router → service → dao</code>.</li>
+    <li>Run it beside the FastAPI version; diff the JSON responses until they match.</li>
+  </ul>
+
+  <h4 class="test">Test — when/how would you use…</h4>
+  <ol>
+    <li>Why does scoring belong on the server here, not the client? What's the general rule for that decision?</li>
+    <li>When do you validate with Zod on the server even though the client already checks the input?</li>
+    <li>What belongs in middleware versus in a route handler? Give one of each from this game.</li>
+    <li>The daily word is server state; the current typed guess is client state. How do you decide which is which?</li>
+    <li>When do you reach for TanStack Query instead of <code>fetch</code> + <code>useState</code>?</li>
+    <li>A <code>pg</code> query returns rows. Where do you shape them into the response the client wants, and why there?</li>
+    <li>How do you pass Databricks auth to the DB without putting a secret in the frontend?</li>
+    <li>Two users hit <code>/api/guess</code> at once. What about your handler must be safe, and what can be shared?</li>
+  </ol>
+
+  <hr class="divider">
+
+  <!-- ================= WEEK 4 ================= -->
+  <h3><span class="wknum">Week 4</span>Wordle Leaderboard</h3>
+  <p class="focus">A typed client contract and real forms.</p>
+
+  <h4>Tangible outcome</h4>
+  <p>Wordle now records results to Lakebase, shows a leaderboard, and has a settings form with validation. Client and server share types with no generated client.</p>
+
+  <h4>Learning outcomes</h4>
+  <div class="pill-row">
+    <span class="pill">useQuery</span><span class="pill">useMutation</span><span class="pill">cache invalidation</span>
+    <span class="pill">Hono RPC / shared types</span><span class="pill">react-hook-form</span><span class="pill">Zod schema</span>
+    <span class="pill">Suspense</span><span class="pill">error boundaries</span><span class="pill">localStorage</span>
+  </div>
+
+  <h4 class="learn">Game — success criteria</h4>
+  <div class="criteria"><ul>
+    <li>Finishing a game updates the leaderboard without a manual refresh.</li>
+    <li>The settings form refuses bad input and explains why, before it saves.</li>
+    <li>A failed network call shows a sensible fallback, not a blank screen.</li>
+    <li>Changing a type on the server surfaces as a type error in the client.</li>
+  </ul></div>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: <code>useQuery</code> for the leaderboard and <code>useMutation</code> for submitting a result, with cache invalidation; a shared type contract (Hono RPC); a <code>react-hook-form</code> form validated by a Zod schema; one error boundary.</p>
+
+  <h4 class="ship">FDE One — refactor</h4>
+  <ul>
+    <li>Point one real fde-one screen at its new Hono endpoint through the typed client.</li>
+    <li>Delete that slice's dependency on the apx-generated <code>api.ts</code> + <code>axios</code>, keeping the <code>useXSuspense</code> ergonomics.</li>
+  </ul>
+
+  <h4 class="test">Test — when/how would you use…</h4>
+  <ol>
+    <li>After a mutation, the leaderboard is stale. What are your options to refresh it, and when do you pick each?</li>
+    <li>What's a query key, and what happens if two queries accidentally share one?</li>
+    <li>When does validation belong in the Zod schema versus in the submit handler?</li>
+    <li>Why validate the same form data on both client and server?</li>
+    <li>When is a controlled input worth the boilerplate, and when does react-hook-form avoid it?</li>
+    <li>Where do you put an error boundary, and what should it catch versus let through?</li>
+    <li>What does a shared type contract buy you over a hand-written client, concretely?</li>
+    <li>You optimistically show a result before the server confirms. What must you handle if it fails?</li>
+    <li>When is <code>localStorage</code> the right store, and when is it the wrong one?</li>
+  </ol>
+
+  <hr class="divider">
+
+  <!-- ================= WEEK 5 ================= -->
+  <h3><span class="wknum">Week 5</span>Stats dashboard + deploy</h3>
+  <p class="focus">fde-one's real UI surfaces and the build/deploy loop.</p>
+
+  <h4>Tangible outcome</h4>
+  <p>A stats dashboard for your games (charts, toasts, a markdown rules page) deployed as a live Databricks App you can send a link to.</p>
+
+  <h4>Learning outcomes</h4>
+  <div class="pill-row">
+    <span class="pill">recharts</span><span class="pill">sonner toasts</span><span class="pill">react-markdown</span>
+    <span class="pill">Vite build</span><span class="pill">dev proxy</span><span class="pill">SPA from backend</span>
+    <span class="pill">entrypoint.sh</span><span class="pill">app.yml</span>
+  </div>
+
+  <h4 class="learn">Game — success criteria</h4>
+  <div class="criteria"><ul>
+    <li>The dashboard turns stored results into a chart that's readable at a glance.</li>
+    <li>Finishing a game gives immediate, non-blocking feedback.</li>
+    <li>In development, frontend and API run together with live reload.</li>
+    <li>In production, one process serves both, reachable at a URL you share.</li>
+  </ul></div>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a recharts chart from real data; a sonner toast; a react-markdown page; a Vite dev proxy to the Hono API; a single-process production build launched by your own <code>entrypoint.sh</code> + <code>app.yml</code> on Databricks Apps.</p>
+
+  <h4 class="ship">FDE One — refactor</h4>
+  <ul>
+    <li>Write fde-one's <code>entrypoint.sh</code> + <code>app.yml</code> to build the UI and launch Hono.</li>
+    <li>Replace <code>_metadata.py</code> generation with a TS build-stamp step.</li>
+    <li>Reproduce <code>apx dev check</code> as <code>tsc --noEmit</code> + Biome in the Makefile.</li>
+  </ul>
+
+  <h4 class="test">Test — when/how would you use…</h4>
+  <ol>
+    <li>When is a toast the right feedback, and when do you need something more blocking?</li>
+    <li>Why does the dev server proxy <code>/api</code> instead of the frontend calling the backend's port directly?</li>
+    <li>What's different about serving the built SPA from the backend versus running Vite in dev?</li>
+    <li>What does <code>entrypoint.sh</code> have to guarantee for the Databricks Apps platform (port, foreground)?</li>
+    <li>When do you compute chart data on the server versus in the component?</li>
+    <li>What replaces apx's generated <code>_metadata.py</code>, and when does that value get stamped?</li>
+    <li>Why run <code>tsc --noEmit</code> in CI when the app already builds?</li>
+    <li>A deploy returns 502. What are the first two things you check given the entrypoint contract?</li>
+  </ol>
+
+  <hr class="divider">
+
+  <!-- ================= WEEK 6 ================= -->
+  <h3><span class="wknum">Week 6</span>Static site + cut over</h3>
+  <p class="focus">GitHub Pages and finishing the migration.</p>
+
+  <h4>Tangible outcome</h4>
+  <p>A live GitHub Pages site collecting the games (backend ones running client-only), with tests on the core logic — and fde-one running with zero apx.</p>
+
+  <h4>Learning outcomes</h4>
+  <div class="pill-row">
+    <span class="pill">Vitest</span><span class="pill">React Testing Library</span><span class="pill">static build</span>
+    <span class="pill">GitHub Actions</span><span class="pill">Pages base path</span><span class="pill">client-only data</span>
+  </div>
+
+  <h4 class="learn">Game — success criteria</h4>
+  <div class="criteria"><ul>
+    <li>Every game is reachable from one deployed URL with no server running.</li>
+    <li>The backend games still work using only what the browser has.</li>
+    <li>The game logic has tests that fail when the logic breaks.</li>
+    <li>A push to main redeploys the site on its own.</li>
+  </ul></div>
+  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a Vitest unit test on win-detection; one React Testing Library component test; a static Vite build with the correct Pages <code>base</code>; a GitHub Actions workflow that builds and publishes.</p>
+
+  <h4 class="ship">FDE One — refactor</h4>
+  <ul>
+    <li>Port the remaining routers to Hono; retire <code>fde_one/backend</code> (FastAPI).</li>
+    <li>Delete <code>[tool.apx.*]</code>, remove the apx MCP from <code>.mcp.json</code>, strip apx from docs.</li>
+    <li>Parity pass on staging; open the migration PR; update <code>CLAUDE.md</code>. <code>grep apx</code> returns nothing.</li>
+  </ul>
+
+  <h4 class="test">Test — when/how would you use…</h4>
+  <ol>
+    <li>What logic is worth a unit test here, and what isn't?</li>
+    <li>When do you test through the rendered component (RTL) rather than the function directly?</li>
+    <li>A backend game must run with no server. What has to change, and what can stay?</li>
+    <li>Why does GitHub Pages need a <code>base</code> path, and what breaks if it's wrong?</li>
+    <li>What should the Actions workflow do on a pull request versus on a merge to main?</li>
+    <li>How do you prove fde-one has no remaining apx dependency, beyond the app booting?</li>
+    <li>When would you keep the FastAPI backend behind a flag instead of deleting it?</li>
+    <li>A test passes locally but fails in CI. What are the usual causes?</li>
+  </ol>
+
+  <hr class="divider">
+
+  <h2>Not covered, by design</h2>
+  <p>SSR / Next.js / RSC — Databricks Apps serves a static SPA plus an API, so these would mislead. Redux / Zustand — fde-one uses TanStack Query for server state and local <code>useState</code>, with no global store.</p>
+
+  <h2>Open decision</h2>
+  <p>Hono vs. AppKit (<code>@databricks/appkit</code>): Hono maximizes learning but is yours to maintain; AppKit is officially supported. Worth checking with <code>#fde-one-dev</code> before committing a shared repo.</p>
+
+</div>

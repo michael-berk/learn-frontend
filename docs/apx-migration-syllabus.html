@@ -68,14 +68,8 @@
   a { color: inherit; }
   p { margin: 0 0 12px; }
 
-  /* Heading hierarchy reads by SIZE and COLOR:
-     h1 2.1rem ink · h2 1.6rem accent · h3 1.3rem ship · h4 1.05rem (role color) */
-  h1 {
-    font-size: 2.1rem;
-    line-height: 1.15;
-    margin: 0 0 6px;
-    color: var(--fg);
-  }
+  /* Heading hierarchy by SIZE and COLOR. */
+  h1 { font-size: 2.1rem; line-height: 1.15; margin: 0 0 6px; color: var(--fg); }
   .sub { color: var(--muted); margin: 0 0 10px; max-width: 64ch; }
 
   h2 {
@@ -86,25 +80,11 @@
     color: var(--accent);
   }
 
-  /* week heading */
-  h3 {
-    font-size: 1.3rem;
-    margin: 42px 0 2px;
-    padding-top: 10px;
-    color: var(--ship);
-  }
+  h3 { font-size: 1.3rem; margin: 42px 0 2px; padding-top: 10px; color: var(--ship); }
   h3 .wknum { color: var(--muted); font-weight: 600; font-size: .85rem; display: block; letter-spacing: .04em; text-transform: uppercase; }
   .focus { color: var(--muted); font-size: .92rem; margin: 2px 0 16px; }
 
-  /* field label (Tangible outcome / Learning outcomes / etc.) — bigger + colored by role */
-  h4 {
-    font-size: 1.05rem;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: none;
-    margin: 20px 0 5px;
-    color: var(--fg);
-  }
+  h4 { font-size: 1.05rem; font-weight: 700; margin: 20px 0 5px; color: var(--fg); }
   h4.learn { color: var(--learn); }
   h4.ship { color: var(--ship); }
   h4.test { color: var(--test); }
@@ -130,317 +110,338 @@
     margin: 4px 0 0;
   }
   .criteria ul { margin: 0; }
+  .must { font-size: .9rem; color: var(--muted); margin-top: 8px; }
 
-  .test ol { counter-reset: q; }
-
-  /* tables */
-  .scroll { overflow-x: auto; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 6px 0 14px;
-    font-size: .95rem;
-  }
-  th, td {
-    text-align: left;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
-  }
-  th {
-    font-size: .78rem;
-    text-transform: uppercase;
-    letter-spacing: .04em;
+  .known {
+    background: var(--panel);
+    border-left: 3px solid var(--muted);
+    border-radius: 0 6px 6px 0;
+    padding: 8px 14px;
+    margin: 6px 0 0;
+    font-size: .9rem;
     color: var(--muted);
   }
+
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: .95rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
   td:first-child { white-space: nowrap; font-weight: 600; }
 
   .divider { height: 1px; background: var(--line); border: 0; margin: 36px 0 0; }
+  .callout { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 10px 0; }
 </style>
 
 <div class="wrap">
 
   <h1>fde-one apx migration syllabus</h1>
-  <p class="sub">60 hours over 6 weeks. Each week ships one playable game that teaches a skill fde-one uses, plus a matching refactor task in fde-one. The games assemble into a static GitHub Pages site. The Databricks data layer stays.</p>
+  <p class="sub">60 hours over 6 weeks. Calibrated for a senior backend/AI engineer: it skips what you already own (API design, SQL/<code>pg</code>, auth, concurrency, deploy, testing discipline) and concentrates on what's genuinely new — the React rendering model, CSS and layout, design systems, and shipping polished production frontends. Games are the forcing function; the matching fde-one refactor runs alongside.</p>
+
+  <div class="callout">
+    <b>Backend stack: Hono first, then AppKit.</b> Weeks 3–5 build the game backends on <b>Hono</b> — a thin router that leaves the request lifecycle, middleware, and typed client visible, so you learn the primitives bare. Week 6 migrates a game to <b>AppKit</b> (<code>@databricks/appkit</code>), Databricks' first-party SDK, so you can see exactly what a framework abstracts once you've done it by hand. fde-one's real end state is <b>AppKit</b> — officially supported, not a bespoke stack. The Hono work on fde-one in weeks 3–5 is a deliberate learning rehearsal of the API shape before the AppKit cutover.
+  </div>
+
+  <div class="callout">
+    <b>Reading this as a backend engineer.</b> The backend weeks (3–5) are deliberately thin — Hono/<code>pg</code>/auth/deploy are your existing skills in new syntax, so those sections just name the syntax and move on, with no test. The weight is in weeks 1, 2, and 6: the browser runtime, reconciliation, CSS/layout, and production polish. That's where strong backend engineers actually get stuck.
+  </div>
 
   <h2>Syllabus at a glance</h2>
   <div class="scroll"><table>
-    <tr><th>Wk</th><th>Project</th><th>Core skill</th><th>You will have built</th></tr>
-    <tr><td>1</td><td>Tic-Tac-Toe</td><td>React + styling</td><td>A styled, interactive board</td></tr>
-    <tr><td>2</td><td>Connect Four</td><td>Routing + a11y</td><td>A routed, keyboard-playable game</td></tr>
-    <tr><td>3</td><td>Wordle</td><td>Hono + Lakebase backend</td><td>A game with a real API + DB</td></tr>
-    <tr><td>4</td><td>Wordle Leaderboard</td><td>Typed client + forms</td><td>Writes, a leaderboard, a validated form</td></tr>
-    <tr><td>5</td><td>Stats + deploy</td><td>Charts + build/deploy</td><td>A dashboard deployed to Databricks Apps</td></tr>
-    <tr><td>6</td><td>Static site</td><td>Testing + GitHub Pages</td><td>A live portfolio site of the games</td></tr>
+    <tr><th>Wk</th><th>Project</th><th>New skill (for you)</th><th>Hours bias</th></tr>
+    <tr><td>1</td><td>Tic-Tac-Toe</td><td>React mental model + styling system</td><td>heavy frontend</td></tr>
+    <tr><td>2</td><td>Connect Four</td><td>Reconciliation, re-renders, refs, a11y</td><td>heavy frontend</td></tr>
+    <tr><td>3</td><td>Wordle</td><td>Hono (new syntax) + data fetching lifecycle</td><td>light backend / med frontend</td></tr>
+    <tr><td>4</td><td>Leaderboard</td><td>Server-state cache, forms, async UI states</td><td>med frontend</td></tr>
+    <tr><td>5</td><td>Stats + deploy</td><td>CSS layout, charts, deploy (new syntax)</td><td>heavy CSS / light deploy</td></tr>
+    <tr><td>6</td><td>Hono → AppKit</td><td>What a framework abstracts; AppKit SDK</td><td>med frontend / arch</td></tr>
   </table></div>
-  <p>Removing apx retires five couplings: the dev loop, the generated OpenAPI client (<code>lib/api.ts</code>), <code>_metadata.py</code>, the shadcn registries, and the apx MCP tools. Config is only <code>[tool.apx.*]</code> in <code>pyproject.toml</code>; the rest is behavior each week replaces.</p>
+  <p>Removing apx retires five couplings: the dev loop, the generated OpenAPI client (<code>lib/api.ts</code>), <code>_metadata.py</code>, the shadcn registries, and the apx MCP tools. Config is only <code>[tool.apx.*]</code> in <code>pyproject.toml</code>; the rest is behavior, none of it conceptually hard for you. fde-one's target is <b>AppKit</b>, which supplies its own dev loop, typed client, and build — so adopting AppKit retires most of those couplings at once rather than hand-rebuilding each.</p>
 
   <h2>Weeks</h2>
 
   <!-- ================= WEEK 1 ================= -->
   <h3><span class="wknum">Week 1</span>Tic-Tac-Toe</h3>
-  <p class="focus">React fundamentals and fde-one's styling model. No backend.</p>
+  <p class="focus">The React mental model and the styling system. The whole point is unlearning imperative/stateful habits.</p>
 
   <h4>Tangible outcome</h4>
-  <p>A tic-tac-toe game you can play in the browser, styled with the same component system fde-one uses. It is the first page of your capstone repo.</p>
+  <p>A styled, playable tic-tac-toe — the first page of your capstone repo — built the idiomatic React way, not as a DOM-mutation script.</p>
 
   <h4>Learning outcomes</h4>
   <div class="pill-row">
-    <span class="pill">components</span><span class="pill">props</span><span class="pill">useState</span>
-    <span class="pill">event handlers</span><span class="pill">derived state</span><span class="pill">conditional render</span>
-    <span class="pill">list keys</span><span class="pill">Tailwind + shadcn</span><span class="pill">TS props/events</span>
+    <span class="pill">render-as-function-of-state</span><span class="pill">one-way data flow</span><span class="pill">derived vs stored state</span>
+    <span class="pill">immutability</span><span class="pill">JSX</span><span class="pill">composition / children</span><span class="pill">compound components</span>
+    <span class="pill">controlled vs uncontrolled</span><span class="pill">Tailwind</span><span class="pill">shadcn + cn()</span>
   </div>
+  <div class="known">Assumed known, not taught: components as functions, props as arguments, event handling, data structures. The new ideas: you describe UI as a pure function of state and never touch the DOM yourself; you compose UI by passing <code>children</code> and slots rather than configuring via flags; and <em>who owns a value's state — React or the DOM</em> (controlled vs. uncontrolled) is a deliberate choice, not a default.</div>
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>Two players can take turns and the game knows whose turn it is.</li>
-    <li>The game detects a win or a draw and makes the result obvious.</li>
-    <li>A finished game can be started over without reloading the page.</li>
-    <li>It looks intentional, not like unstyled HTML.</li>
+    <li>The entire board is a function of one state value — you never imperatively update a cell.</li>
+    <li>Whose-turn and the winner are never stored; they fall out of the state.</li>
+    <li>Resetting is a state change, not DOM surgery.</li>
+    <li>It looks intentional, using the real component system rather than raw HTML.</li>
   </ul></div>
-  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a <code>Square</code> child component driven by <code>props</code>; board state in a single <code>useState</code>; the winner computed from state, not stored separately; shadcn <code>Button</code>/<code>Dialog</code> styled with <code>cn()</code>.</p>
+  <p class="must">Must use to learn: a single <code>useState</code> for the board; the winner/turn computed on each render; a new array on every move (no mutation); shadcn <code>Button</code>/<code>Dialog</code> styled through <code>cn()</code>/<code>tailwind-merge</code>. Build a reusable <code>&lt;Cell&gt;</code> that takes <code>children</code>, and use the <code>Dialog</code> as the compound component it is (<code>DialogTrigger</code>/<code>DialogContent</code>) rather than a boolean-driven modal.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
-    <li>No code change yet. Map the apx surface: <code>grep apx</code>, inventory <code>_metadata.py</code> and <code>lib/api.ts</code>, annotate <code>tsconfig.json</code> / <code>biome.jsonc</code> / <code>vite.config.ts</code>.</li>
-    <li>Open the "apx removal" tracking issue listing the five couplings.</li>
+    <li>No code change. Map the apx surface (<code>grep apx</code>, <code>_metadata.py</code>, <code>lib/api.ts</code>) and open the "apx removal" issue with the five couplings. This is reconnaissance you can do fast.</li>
   </ul>
 
-  <h4 class="test">Test — when/how would you use…</h4>
+  <h4 class="test">Test — frontend judgment (new material only)</h4>
   <ol>
-    <li>You have one piece of data two components both need. Where does it live, and why not duplicate it?</li>
-    <li>Whose-turn and the winner can both be computed from the board. Why store neither in its own <code>useState</code>?</li>
-    <li>When is a value a prop versus state? Give a tic-tac-toe example of each.</li>
-    <li>You render the 9 squares with <code>.map()</code>. Why does each need a <code>key</code>, and what makes a good one here?</li>
-    <li>A click handler needs to know which square was clicked. How do you pass that without making 9 different functions by hand?</li>
-    <li>What goes wrong if you mutate the board array directly instead of making a new one?</li>
-    <li>When would you reach for <code>cn()</code> / <code>tailwind-merge</code> instead of a plain <code>className</code> string?</li>
-    <li>You want a "You won" popup. Why a shadcn <code>Dialog</code> rather than conditionally rendering a styled <code>div</code>?</li>
+    <li>You mutate the board array in place and call <code>setState</code> with it. The UI doesn't update. Why — and what's the model being violated?</li>
+    <li>Why is "whose turn" derived state and not its own <code>useState</code>? What class of bug does storing it invite?</li>
+    <li>In React you never write to the DOM directly. What is the framework actually doing on your behalf, and why does that constraint exist?</li>
+    <li>When would <code>cn()</code> / <code>tailwind-merge</code> change the output versus a plain template string of classes?</li>
+    <li>You want a win modal. Why reach for a shadcn <code>Dialog</code> (focus trap, portal, escape) instead of a conditionally-rendered styled div?</li>
+    <li>A compound component (<code>&lt;Dialog&gt;&lt;DialogTrigger/&gt;&lt;DialogContent/&gt;&lt;/Dialog&gt;</code>) vs. one that takes a dozen boolean/render props — what does the composition style buy the caller?</li>
+    <li>Give one value in this game you'd keep uncontrolled (DOM-owned) and one you'd control in React. What's the deciding question?</li>
   </ol>
 
   <hr class="divider">
 
   <!-- ================= WEEK 2 ================= -->
   <h3><span class="wknum">Week 2</span>Connect Four</h3>
-  <p class="focus">Routing, larger state, and accessibility. No backend.</p>
+  <p class="focus">Reconciliation, why re-renders happen, refs, and accessibility. The genuinely non-obvious React.</p>
 
   <h4>Tangible outcome</h4>
-  <p>A Connect Four game that lives behind its own route (a menu links to it), is fully playable with the keyboard, and handles a 42-cell board.</p>
+  <p>A routed, keyboard-playable Connect Four whose rendering you can explain and profile — you know what re-renders on each move and why.</p>
 
   <h4>Learning outcomes</h4>
   <div class="pill-row">
-    <span class="pill">TanStack Router</span><span class="pill">route params</span><span class="pill">2D state</span>
-    <span class="pill">lifting state</span><span class="pill">useEffect</span><span class="pill">cleanup</span>
-    <span class="pill">keyboard events</span><span class="pill">ARIA / focus</span><span class="pill">React DevTools</span>
+    <span class="pill">reconciliation + keys</span><span class="pill">re-render causes</span><span class="pill">useMemo / useCallback</span>
+    <span class="pill">useRef vs state</span><span class="pill">effect timing + cleanup</span><span class="pill">exhaustive-deps</span>
+    <span class="pill">effects you don't need</span><span class="pill">Context + provider</span><span class="pill">Context re-render pitfall</span>
+    <span class="pill">DOM events / bubbling</span><span class="pill">portals</span><span class="pill">TanStack Router</span>
+    <span class="pill">ARIA / focus mgmt</span><span class="pill">React DevTools Profiler</span>
   </div>
+  <div class="known">Assumed known: routing as a concept, state management in the abstract, event loops. New: React's diffing algorithm, the exact triggers for a re-render, when memoization helps vs. hurts, refs as the escape hatch, Context for tree-wide state (and why it re-renders every consumer), the deps array as a discipline you don't lie to, when an effect is the wrong tool, and the browser primitives React sits on (event bubbling, portals).</div>
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>From a landing screen, a player can navigate to the game and back by URL.</li>
-    <li>Dropping a piece respects gravity, and the game detects four in a row in any direction.</li>
-    <li>Everything playable with a mouse is also playable with only the keyboard.</li>
-    <li>A screen reader can tell whose turn it is and the state of a column.</li>
+    <li>You can state, for a single move, which components re-render and justify each.</li>
+    <li>Nothing re-renders that didn't need to — proven in the Profiler, not assumed.</li>
+    <li>An imperative concern (animation, focus, measuring a node) is handled without forcing a re-render.</li>
+    <li>Shared state (theme or current player) reaches deep components without prop-drilling, and you know what it costs in re-renders.</li>
+    <li>Fully operable and announced by keyboard and screen reader; routed via URL.</li>
   </ul></div>
-  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: two routes via TanStack Router; the board as a single lifted state object; a <code>useEffect</code> that does something real (e.g. a drop animation or AI delay) with a cleanup; keyboard handlers and ARIA roles on the grid.</p>
+  <p class="must">Must use to learn: a deliberate <code>useMemo</code>/<code>useCallback</code> you can prove earns its place; a <code>useRef</code> for an imperative task (focus or measure); an effect with cleanup for the drop animation; a <strong>Context provider</strong> for theme or current-player (observe which consumers re-render); at least one place you deliberately <em>avoid</em> an effect by deriving state or using an event handler; TanStack Router for menu → game; ARIA roles + keyboard handlers on the grid, with the win popup rendered through a <strong>portal</strong>.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
-    <li>No code change. Trace one real route end to end: component → <code>useXSuspense</code> hook → <code>lib/api.ts</code> → FastAPI route.</li>
-    <li>Write up the <code>useXSuspense</code> / <code>selector()</code> pattern and how the TanStack Router tree is generated — you reproduce both later.</li>
+    <li>No code change. Trace one route end to end and document the <code>useXSuspense</code> / <code>selector()</code> pattern and how the router tree is generated — you'll reproduce both later.</li>
   </ul>
 
-  <h4 class="test">Test — when/how would you use…</h4>
+  <h4 class="test">Test — frontend judgment (new material only)</h4>
   <ol>
-    <li>When should two screens be two routes versus one component toggling state? What do you gain from routes?</li>
-    <li>You need the game to know which board to load from the URL. How do route params get there, and when do they change?</li>
-    <li>A column's win-check reads the whole board. Why keep the board in one state object rather than 7 column states?</li>
-    <li>Name a thing in this game that belongs in <code>useEffect</code> and a thing that does not. What's the test?</li>
-    <li>Your effect starts a timer. What breaks if you don't return a cleanup, and when does cleanup run?</li>
-    <li>The board re-renders on every move. How do you confirm in DevTools whether that's a problem?</li>
-    <li>How do you make a grid of divs operable and announced for keyboard and screen-reader users?</li>
-    <li>When is a dependency array wrong, and how do stale closures show up in gameplay?</li>
+    <li>A parent re-renders. Which children re-render by default, and what actually stops the cascade?</li>
+    <li>You wrap a value in <code>useMemo</code> and see no change. Give two reasons memoization can be useless or net-negative here.</li>
+    <li>When does a list need stable keys beyond "React complains," and what's the visible bug with index keys in a reorderable list?</li>
+    <li>You need to focus the active column on each turn. Why is that a <code>useRef</code> + effect job and not state?</li>
+    <li>An effect reads the board but only lists <code>[]</code> as deps. What's the stale-closure failure mode in gameplay terms?</li>
+    <li>You put game logic in a <code>useEffect</code> that watches a move and sets more state. When is that a code smell, and what replaces it?</li>
+    <li>You move theme into Context and now a deep component re-renders on every unrelated theme-adjacent change. Why, and how do you contain it?</li>
+    <li>When is Context the right tool versus lifting state, prop-drilling, or server state? What's the test?</li>
+    <li>A click on a child also fires a handler on an ancestor. Explain the mechanism and how you'd stop it — and why React's event system matters here.</li>
+    <li>Why does a modal/popover often need a portal, and what breaks (stacking, overflow, focus) if you render it inline?</li>
+    <li>In the Profiler you see the whole board re-rendering per move. What's your decision tree before reaching for memoization?</li>
+    <li>What has to be true for a grid of divs to be fully keyboard-operable and screen-reader-correct?</li>
   </ol>
 
   <hr class="divider">
 
   <!-- ================= WEEK 3 ================= -->
   <h3><span class="wknum">Week 3</span>Wordle</h3>
-  <p class="focus">Your first Hono + Lakebase backend.</p>
+  <p class="focus">A backend you already know how to build, in Hono syntax — plus the frontend data-fetching lifecycle, which is new.</p>
 
   <h4>Tangible outcome</h4>
-  <p>A Wordle game where the word and guess-scoring live on a Hono server backed by a Lakebase word table, so the answer can't be read from the browser.</p>
+  <p>Wordle with a Hono + Lakebase backend. You wrote the server in an hour; the learning is in how the client consumes it.</p>
 
   <h4>Learning outcomes</h4>
   <div class="pill-row">
-    <span class="pill">Hono routes</span><span class="pill">middleware</span><span class="pill">Zod validation</span>
-    <span class="pill">pg / Lakebase</span><span class="pill">auth headers</span><span class="pill">fetch</span>
-    <span class="pill">TanStack Query</span><span class="pill">server vs client state</span>
+    <span class="pill">Hono (syntax)</span><span class="pill">fetch in React</span><span class="pill">loading/error/success states</span>
+    <span class="pill">TanStack Query basics</span><span class="pill">request lifecycle in UI</span>
   </div>
+  <div class="known">Assumed known — stated, not taught: routing, middleware, Zod validation, <code>pg</code>, auth headers, "scoring belongs server-side," concurrency. You've done all of this. Hono is just the syntax; skim its docs and port your instincts. New: representing an async request's states in a UI without race conditions.</div>
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>The client never knows the answer until the game is over.</li>
-    <li>A guess that isn't a real word is rejected before it counts.</li>
-    <li>Each guess comes back scored (right spot / wrong spot / absent) and the UI reflects it.</li>
-    <li>The word list is data, not hardcoded in a component.</li>
+    <li>The server owns the word and scoring (obvious to you — just build it).</li>
+    <li>The UI distinctly represents loading, error, and success for every call — no flashes of wrong state, no stuck spinners.</li>
+    <li>A slow then fast request can't render out of order.</li>
+    <li>The word list is data, static-site-ready for week 6.</li>
   </ul></div>
-  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a Hono API with <code>GET</code> + <code>POST</code> routes; Zod on the request body; a <code>pg</code> query against Lakebase; one piece of middleware (auth or logging); TanStack Query for the guess call. Keep a bundled word list too for week 6's static version.</p>
+  <p class="must">Must use to learn (frontend side): TanStack Query for the guess call, surfacing its loading/error/data states in the UI. The Hono API itself is a translation exercise, not a lesson.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
-    <li>Reimplement fde-one's simplest read-only router in Hono, mirroring <code>router → service → dao</code>.</li>
-    <li>Run it beside the FastAPI version; diff the JSON responses until they match.</li>
+    <li>Reimplement fde-one's simplest read-only router in Hono (<code>router → service → dao</code>); diff JSON against FastAPI for parity. This is a <em>rehearsal</em> — the real cutover (week 6+) targets AppKit, but doing it in bare Hono first teaches you the API shape so AppKit's abstractions make sense.</li>
   </ul>
 
-  <h4 class="test">Test — when/how would you use…</h4>
+  <h4 class="test">Test — frontend judgment (new material only)</h4>
   <ol>
-    <li>Why does scoring belong on the server here, not the client? What's the general rule for that decision?</li>
-    <li>When do you validate with Zod on the server even though the client already checks the input?</li>
-    <li>What belongs in middleware versus in a route handler? Give one of each from this game.</li>
-    <li>The daily word is server state; the current typed guess is client state. How do you decide which is which?</li>
-    <li>When do you reach for TanStack Query instead of <code>fetch</code> + <code>useState</code>?</li>
-    <li>A <code>pg</code> query returns rows. Where do you shape them into the response the client wants, and why there?</li>
-    <li>How do you pass Databricks auth to the DB without putting a secret in the frontend?</li>
-    <li>Two users hit <code>/api/guess</code> at once. What about your handler must be safe, and what can be shared?</li>
+    <li>Hand-rolling <code>fetch</code> + <code>useState</code>, name three UI states you must handle and the race condition you'll hit if you don't.</li>
+    <li>What does TanStack Query handle for you that you'd otherwise write by hand, and when is it overkill?</li>
+    <li>Two guesses fire quickly; responses return out of order. How does the UI avoid showing the wrong one?</li>
   </ol>
 
   <hr class="divider">
 
   <!-- ================= WEEK 4 ================= -->
   <h3><span class="wknum">Week 4</span>Wordle Leaderboard</h3>
-  <p class="focus">A typed client contract and real forms.</p>
+  <p class="focus">Server-state caching, forms, and the async UI states that have no backend analog.</p>
 
   <h4>Tangible outcome</h4>
-  <p>Wordle now records results to Lakebase, shows a leaderboard, and has a settings form with validation. Client and server share types with no generated client.</p>
+  <p>A leaderboard that updates without a refresh and a settings form that validates inline. Client/server share types with no generated client.</p>
 
   <h4>Learning outcomes</h4>
   <div class="pill-row">
-    <span class="pill">useQuery</span><span class="pill">useMutation</span><span class="pill">cache invalidation</span>
-    <span class="pill">Hono RPC / shared types</span><span class="pill">react-hook-form</span><span class="pill">Zod schema</span>
-    <span class="pill">Suspense</span><span class="pill">error boundaries</span><span class="pill">localStorage</span>
+    <span class="pill">cache keys + invalidation</span><span class="pill">optimistic updates</span><span class="pill">useMutation</span>
+    <span class="pill">custom hooks</span><span class="pill">react-hook-form</span><span class="pill">controlled vs uncontrolled</span>
+    <span class="pill">composed Suspense + error boundaries</span><span class="pill">Hono RPC types</span>
   </div>
+  <div class="known">Assumed known: schema validation (you'll use Zod but you know validation), what a type contract buys you, HTTP semantics, when to persist. New: client-side cache as a first-class concern, optimistic UI + rollback, React's form ergonomics (controlled inputs, uncontrolled refs, re-render cost), extracting stateful logic into a reusable custom hook, and composing Suspense + error boundaries so each slice of the tree has its own loading and failure handling.</div>
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>Finishing a game updates the leaderboard without a manual refresh.</li>
-    <li>The settings form refuses bad input and explains why, before it saves.</li>
-    <li>A failed network call shows a sensible fallback, not a blank screen.</li>
-    <li>Changing a type on the server surfaces as a type error in the client.</li>
+    <li>Finishing a game reflects on the leaderboard immediately, then reconciles with the server.</li>
+    <li>If the write fails, the UI rolls back cleanly — no lie left on screen.</li>
+    <li>The settings form validates inline without re-rendering the world on every keystroke.</li>
+    <li>The leaderboard's data logic lives in a reusable hook, not inline in the component.</li>
+    <li>A render-time error in one widget doesn't blank the page; the rest keeps working.</li>
   </ul></div>
-  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: <code>useQuery</code> for the leaderboard and <code>useMutation</code> for submitting a result, with cache invalidation; a shared type contract (Hono RPC); a <code>react-hook-form</code> form validated by a Zod schema; one error boundary.</p>
+  <p class="must">Must use to learn: <code>useQuery</code> + <code>useMutation</code> with explicit cache keys and invalidation; one optimistic update with rollback; a <strong>custom hook</strong> (e.g. <code>useLeaderboard()</code>) that encapsulates the query + mutation and returns a clean API; a <code>react-hook-form</code> form (notice the uncontrolled design and why); a <strong>Suspense boundary and an error boundary scoped to one panel</strong> so its loading/failure is isolated; a shared Hono RPC type.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
-    <li>Point one real fde-one screen at its new Hono endpoint through the typed client.</li>
-    <li>Delete that slice's dependency on the apx-generated <code>api.ts</code> + <code>axios</code>, keeping the <code>useXSuspense</code> ergonomics.</li>
+    <li>Point one real fde-one screen at its Hono endpoint through the typed client; delete that slice's dependency on apx-generated <code>api.ts</code> + <code>axios</code>, keeping <code>useXSuspense</code> ergonomics.</li>
   </ul>
 
-  <h4 class="test">Test — when/how would you use…</h4>
+  <h4 class="test">Test — frontend judgment (new material only)</h4>
   <ol>
-    <li>After a mutation, the leaderboard is stale. What are your options to refresh it, and when do you pick each?</li>
-    <li>What's a query key, and what happens if two queries accidentally share one?</li>
-    <li>When does validation belong in the Zod schema versus in the submit handler?</li>
-    <li>Why validate the same form data on both client and server?</li>
-    <li>When is a controlled input worth the boilerplate, and when does react-hook-form avoid it?</li>
-    <li>Where do you put an error boundary, and what should it catch versus let through?</li>
-    <li>What does a shared type contract buy you over a hand-written client, concretely?</li>
-    <li>You optimistically show a result before the server confirms. What must you handle if it fails?</li>
-    <li>When is <code>localStorage</code> the right store, and when is it the wrong one?</li>
+    <li>Client-side cache invalidation is "one of the two hard problems" here too. After a mutation, what are your refresh strategies and when does each win?</li>
+    <li>Walk the optimistic-update lifecycle: what you show immediately, what you keep to roll back, and what happens on failure.</li>
+    <li>Why can an uncontrolled (react-hook-form) input outperform a controlled one, and when would you still want controlled?</li>
+    <li>You extract <code>useLeaderboard()</code>. What belongs inside the hook vs. the component, and what makes its return API good?</li>
+    <li>Two components call <code>useLeaderboard()</code>. Do they share state/fetch or each get their own? What decides that, and when is it a bug?</li>
+    <li>Where do you place Suspense and error boundaries so one failing panel doesn't take the page, and what should the error boundary deliberately not catch?</li>
+    <li>A query key collides between two screens. What's the symptom, and how do you design keys to prevent it?</li>
   </ol>
 
   <hr class="divider">
 
   <!-- ================= WEEK 5 ================= -->
   <h3><span class="wknum">Week 5</span>Stats dashboard + deploy</h3>
-  <p class="focus">fde-one's real UI surfaces and the build/deploy loop.</p>
+  <p class="focus">CSS layout and charts (new) plus build/deploy (your turf, in new syntax).</p>
 
   <h4>Tangible outcome</h4>
-  <p>A stats dashboard for your games (charts, toasts, a markdown rules page) deployed as a live Databricks App you can send a link to.</p>
+  <p>A multi-panel stats dashboard that is actually laid out well — and deployed as a live Databricks App. The deploy is routine for you; the layout is the lesson.</p>
 
   <h4>Learning outcomes</h4>
   <div class="pill-row">
-    <span class="pill">recharts</span><span class="pill">sonner toasts</span><span class="pill">react-markdown</span>
-    <span class="pill">Vite build</span><span class="pill">dev proxy</span><span class="pill">SPA from backend</span>
-    <span class="pill">entrypoint.sh</span><span class="pill">app.yml</span>
+    <span class="pill">flexbox</span><span class="pill">CSS grid</span><span class="pill">responsive layout</span>
+    <span class="pill">spacing + alignment</span><span class="pill">recharts</span><span class="pill">sonner</span><span class="pill">Vite build (syntax)</span>
   </div>
+  <div class="known">Assumed known: build pipelines, serving a SPA from a backend, the Databricks Apps runtime contract, port/foreground rules, env config. You own deployment. New: CSS as a layout engine — flex vs. grid, intrinsic sizing, responsive behavior, and making a dense dashboard read cleanly without a designer.</div>
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>The dashboard turns stored results into a chart that's readable at a glance.</li>
-    <li>Finishing a game gives immediate, non-blocking feedback.</li>
-    <li>In development, frontend and API run together with live reload.</li>
-    <li>In production, one process serves both, reachable at a URL you share.</li>
+    <li>The dashboard holds several panels that stay aligned and readable from mobile to wide screen.</li>
+    <li>Nothing overflows, collides, or stretches awkwardly when the viewport changes.</li>
+    <li>Charts are legible and sized to their container, not fixed pixels.</li>
+    <li>It deploys to a shareable Databricks App URL (mechanical for you).</li>
   </ul></div>
-  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a recharts chart from real data; a sonner toast; a react-markdown page; a Vite dev proxy to the Hono API; a single-process production build launched by your own <code>entrypoint.sh</code> + <code>app.yml</code> on Databricks Apps.</p>
+  <p class="must">Must use to learn: a CSS grid for the panel layout; flexbox within panels; a responsive breakpoint that reflows rather than scrolls; a recharts chart sized by its container; a sonner toast. Build/deploy via your own <code>entrypoint.sh</code> + <code>app.yml</code> — translate your existing knowledge.</p>
 
   <h4 class="ship">FDE One — refactor</h4>
   <ul>
-    <li>Write fde-one's <code>entrypoint.sh</code> + <code>app.yml</code> to build the UI and launch Hono.</li>
-    <li>Replace <code>_metadata.py</code> generation with a TS build-stamp step.</li>
-    <li>Reproduce <code>apx dev check</code> as <code>tsc --noEmit</code> + Biome in the Makefile.</li>
+    <li>Stand up the Hono+Vite deploy for fde-one (<code>entrypoint.sh</code> + <code>app.yml</code>, a TS build-stamp replacing <code>_metadata.py</code>, <code>tsc --noEmit</code> + Biome in the Makefile) — familiar territory, and useful even though AppKit will later own much of it. Note which of these AppKit provides out of the box, so week 6 you know what to delete.</li>
   </ul>
 
-  <h4 class="test">Test — when/how would you use…</h4>
+  <h4 class="test">Test — frontend judgment (new material only)</h4>
   <ol>
-    <li>When is a toast the right feedback, and when do you need something more blocking?</li>
-    <li>Why does the dev server proxy <code>/api</code> instead of the frontend calling the backend's port directly?</li>
-    <li>What's different about serving the built SPA from the backend versus running Vite in dev?</li>
-    <li>What does <code>entrypoint.sh</code> have to guarantee for the Databricks Apps platform (port, foreground)?</li>
-    <li>When do you compute chart data on the server versus in the component?</li>
-    <li>What replaces apx's generated <code>_metadata.py</code>, and when does that value get stamped?</li>
-    <li>Why run <code>tsc --noEmit</code> in CI when the app already builds?</li>
-    <li>A deploy returns 502. What are the first two things you check given the entrypoint contract?</li>
+    <li>Flexbox vs. grid for a dashboard: what question decides which you reach for?</li>
+    <li>A panel's content overflows its box on narrow screens. What are the usual CSS causes and the idiomatic fixes?</li>
+    <li>Why size a chart to its container rather than fixed pixels, and how do you make that happen?</li>
+    <li>You want three columns on desktop and one on mobile with no JS. How, and what makes it reflow rather than shrink?</li>
+    <li>Two sibling panels won't align their baselines. What's typically wrong and how do you debug it?</li>
   </ol>
 
   <hr class="divider">
 
   <!-- ================= WEEK 6 ================= -->
-  <h3><span class="wknum">Week 6</span>Static site + cut over</h3>
-  <p class="focus">GitHub Pages and finishing the migration.</p>
+  <h3><span class="wknum">Week 6</span>Hono → AppKit</h3>
+  <p class="focus">Migrate a game off bare Hono onto AppKit, and see exactly what a framework abstracts once you've built it by hand. Sets up fde-one's real cutover.</p>
 
   <h4>Tangible outcome</h4>
-  <p>A live GitHub Pages site collecting the games (backend ones running client-only), with tests on the core logic — and fde-one running with zero apx.</p>
+  <p>One game (Wordle or the leaderboard) rebuilt on AppKit — same behavior, far less plumbing — plus a written diff of what AppKit replaced. You can now justify fde-one's AppKit target with evidence, not faith.</p>
 
   <h4>Learning outcomes</h4>
   <div class="pill-row">
-    <span class="pill">Vitest</span><span class="pill">React Testing Library</span><span class="pill">static build</span>
-    <span class="pill">GitHub Actions</span><span class="pill">Pages base path</span><span class="pill">client-only data</span>
+    <span class="pill">AppKit SDK</span><span class="pill">plugin model</span><span class="pill">AppKit typed data</span>
+    <span class="pill">framework vs. library trade-off</span><span class="pill">migration diffing</span><span class="pill">appkit-ui</span>
   </div>
+  <div class="known">Assumed known: everything the Hono weeks taught you to do by hand — routing, middleware, the typed client, build/deploy. New here is purely comparative: which of those AppKit owns, what it costs you in control, and when a framework is worth it. You're evaluating a tool, which is squarely a staff-engineer skill — the test reflects that.</div>
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>Every game is reachable from one deployed URL with no server running.</li>
-    <li>The backend games still work using only what the browser has.</li>
-    <li>The game logic has tests that fail when the logic breaks.</li>
-    <li>A push to main redeploys the site on its own.</li>
+    <li>A game that worked on Hono works identically on AppKit, with the hand-rolled plumbing gone.</li>
+    <li>Data access goes through AppKit's typed layer / Lakebase plugin instead of your own <code>pg</code> wiring.</li>
+    <li>You can point at each thing you deleted and name the Hono code AppKit replaced.</li>
+    <li>You have a clear-eyed take on where AppKit helped and where it got in the way.</li>
   </ul></div>
-  <p style="font-size:.9rem;color:var(--muted);margin-top:8px">Must use to learn: a Vitest unit test on win-detection; one React Testing Library component test; a static Vite build with the correct Pages <code>base</code>; a GitHub Actions workflow that builds and publishes.</p>
+  <p class="must">Must use to learn: AppKit's routing + data plugin (Lakebase) in place of your Hono routes and <code>pg</code> calls; at least one <code>appkit-ui</code> component; a short written comparison (what was deleted, what you lost control over). The migration itself is the lesson — don't add new game features.</p>
 
-  <h4 class="ship">FDE One — refactor</h4>
+  <h4 class="ship">FDE One — refactor (kicks off the real cutover)</h4>
   <ul>
-    <li>Port the remaining routers to Hono; retire <code>fde_one/backend</code> (FastAPI).</li>
-    <li>Delete <code>[tool.apx.*]</code>, remove the apx MCP from <code>.mcp.json</code>, strip apx from docs.</li>
-    <li>Parity pass on staging; open the migration PR; update <code>CLAUDE.md</code>. <code>grep apx</code> returns nothing.</li>
+    <li>Decide the fde-one AppKit cutover plan using what you just learned: which apx couplings AppKit replaces directly (dev loop, typed client, build) versus what still needs hand-work.</li>
+    <li>Migrate one fde-one route onto AppKit end to end as the proof of concept; open the "apx → AppKit" migration issue/PR.</li>
+    <li><b>Deferred to a week-7 follow-on (fund from slack):</b> port the remaining routers, delete <code>[tool.apx.*]</code> + the apx MCP from <code>.mcp.json</code>, strip apx from docs, full staging parity pass, update <code>CLAUDE.md</code> until <code>grep apx</code> returns nothing.</li>
   </ul>
 
-  <h4 class="test">Test — when/how would you use…</h4>
+  <h4 class="test">Test — framework-evaluation judgment (new material only)</h4>
   <ol>
-    <li>What logic is worth a unit test here, and what isn't?</li>
-    <li>When do you test through the rendered component (RTL) rather than the function directly?</li>
-    <li>A backend game must run with no server. What has to change, and what can stay?</li>
-    <li>Why does GitHub Pages need a <code>base</code> path, and what breaks if it's wrong?</li>
-    <li>What should the Actions workflow do on a pull request versus on a merge to main?</li>
-    <li>How do you prove fde-one has no remaining apx dependency, beyond the app booting?</li>
-    <li>When would you keep the FastAPI backend behind a flag instead of deleting it?</li>
-    <li>A test passes locally but fails in CI. What are the usual causes?</li>
+    <li>Having built the Hono version, which specific pieces did AppKit let you delete, and which did it only rename?</li>
+    <li>Where did AppKit cost you control, and is that trade acceptable for fde-one? Name the deciding factor.</li>
+    <li>What does fde-one gain from AppKit that a well-maintained bare-Hono stack would not?</li>
+    <li>Which apx couplings does adopting AppKit retire for free, and which still need hand-work?</li>
+    <li>If AppKit's maturity disappointed on one axis, what's your fallback, and how would you de-risk the cutover?</li>
   </ol>
+
+  <div class="callout" style="margin-top:16px">
+    <b>Dropped from the original week 6, by design.</b> The GitHub Pages static site, bundle/perf profiling, and the full fde-one cutover were going to overload this week. The Pages site ships with whatever's done (a nice-to-have, not the point); perf/a11y polish is a self-study checklist in the appendix below; the full cutover is the week-7 follow-on. Week 6 does one thing well: the Hono→AppKit migration that justifies fde-one's target.
+  </div>
 
   <hr class="divider">
 
-  <h2>Not covered, by design</h2>
-  <p>SSR / Next.js / RSC — Databricks Apps serves a static SPA plus an API, so these would mislead. Redux / Zustand — fde-one uses TanStack Query for server state and local <code>useState</code>, with no global store.</p>
+  <h2>Appendix — production-polish checklist (self-study)</h2>
+  <p>Pulled out of week 6 so that week stays focused on the AppKit migration. Fold these into any game whenever you have spare hours; they're a checklist, not a lesson, for someone at your level.</p>
+  <ul>
+    <li><b>Async states:</b> every data-driven screen has a designed loading, empty, and error state — the empty state is the one most often skipped.</li>
+    <li><b>Bundle:</b> run a bundle analysis before optimizing; code-split heavy routes (charts, maps); confirm the main chunk stays lean.</li>
+    <li><b>Accessibility:</b> keyboard-operable, visible focus, semantic roles, color-contrast pass — the cheap, high-value checks before calling a frontend shippable.</li>
+    <li><b>Theming:</b> light/dark via tokens so a toggle and the OS setting both work with no duplicated color logic.</li>
+    <li><b>Static site (optional):</b> collect the games on GitHub Pages via Actions; backend games run client-only (bundled words, <code>localStorage</code>). A portfolio nice-to-have, not a learning goal.</li>
+  </ul>
 
-  <h2>Open decision</h2>
-  <p>Hono vs. AppKit (<code>@databricks/appkit</code>): Hono maximizes learning but is yours to maintain; AppKit is officially supported. Worth checking with <code>#fde-one-dev</code> before committing a shared repo.</p>
+  <h2>Appendix — TypeScript-in-React surface</h2>
+  <p>You know TS; these are the React-specific patterns that still catch strong engineers. Reference them as you hit them, not as a lesson:</p>
+  <ul>
+    <li>Typing props with <code>children</code>: <code>ReactNode</code> vs. <code>ReactElement</code> vs. a render-prop function.</li>
+    <li>Event types (<code>React.MouseEvent&lt;HTMLButtonElement&gt;</code>, <code>ChangeEvent</code>, <code>FormEvent</code>) and why the generic matters.</li>
+    <li>Generic components (a typed <code>&lt;List&lt;T&gt;&gt;</code>), and discriminated-union props for mutually-exclusive variants.</li>
+    <li><code>forwardRef</code> + typing the forwarded ref — needed to build reusable inputs/buttons that compose with Radix.</li>
+    <li>Typing custom hooks' return values (tuples with <code>as const</code> vs. objects) and context values (and the "undefined until provided" guard).</li>
+  </ul>
+
+  <h2>Appendix — state libraries (know they exist, know why we skip them)</h2>
+  <p>Redux / Zustand / Jotai / Recoil are the global-state libraries you'll see in other React codebases. fde-one — and this plan — deliberately use none: <b>server state</b> lives in TanStack Query (cache, refetch, invalidation), <b>tree-wide UI state</b> in Context, and <b>local state</b> in <code>useState</code>. That covers the vast majority of apps. Reach for a store library only when you have genuinely global, frequently-updated client state shared across unrelated trees — rare in a data-driven internal tool. Knowing the boundary is the skill; adopting one here would be the mistake.</p>
+
+  <h2>Deliberately out of scope</h2>
+  <p>Not taught, because you already have it: backend architecture, API/route design, SQL and <code>pg</code>, auth, concurrency, deployment mechanics, testing strategy, CI/CD, type systems, "where logic belongs." The Hono/Lakebase/deploy work appears only as syntax translation, never as a lesson. Also out: SSR / Next.js / RSC (Databricks Apps is a static SPA + API) and Redux / Zustand (fde-one uses TanStack Query + local <code>useState</code>).</p>
+
+  <h2>Resolved: Hono now, AppKit at the end</h2>
+  <p>Games are built on bare <b>Hono</b> through week 5 to learn the primitives, then week 6 migrates to <b>AppKit</b> so the abstraction is visible after you've done it by hand. fde-one's end state is AppKit — officially supported, no bespoke stack to maintain. The intermediate Hono work on fde-one (weeks 3–5) is an intentional rehearsal, not throwaway, since it's what makes AppKit legible. Still worth a <code>#fde-one-dev</code> heads-up before the fde-one cutover PR lands.</p>
 
 </div>

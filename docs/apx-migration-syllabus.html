@@ -109,7 +109,10 @@
     padding: 10px 14px;
     margin: 4px 0 0;
   }
-  .criteria ul { margin: 0; }
+  .criteria ul { margin: 0; list-style: none; padding-left: 0; }
+  .criteria li label { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+  .criteria input[type=checkbox] { accent-color: var(--learn); flex-shrink: 0; }
+  .criteria input[type=checkbox]:checked + span { color: var(--muted); text-decoration: line-through; }
   .must { font-size: .9rem; color: var(--muted); margin-top: 8px; }
 
   .known {
@@ -185,11 +188,11 @@
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>Board size and win-length are parameters; 3×3/3 and 100×100/10 are the same code with different inputs.</li>
-    <li>Placing a stone feels instant at 100×100 — no visible delay between click and update.</li>
-    <li>The win check does <em>not</em> rescan the board; its cost depends on K and not on N.</li>
-    <li>Only the cells that changed re-render — not all 10,000 — and you can prove it in the Profiler.</li>
-    <li>The entire board is a function of state; whose-turn and winner are derived, never stored; reset is a state change.</li>
+    <li><label><input type="checkbox"><span>Board size and win-length are parameters; 3×3/3 and 100×100/10 are the same code with different inputs.</span></label></li>
+    <li><label><input type="checkbox"><span>Placing a stone feels instant at 100×100 — no visible delay between click and update.</span></label></li>
+    <li><label><input type="checkbox"><span>The win check does <em>not</em> rescan the board; its cost depends on K and not on N.</span></label></li>
+    <li><label><input type="checkbox"><span>Only the cells that changed re-render — not all 10,000 — and you can prove it in the Profiler.</span></label></li>
+    <li><label><input type="checkbox"><span>The entire board is a function of state; whose-turn and winner are derived, never stored; reset is a state change.</span></label></li>
   </ul></div>
   <p class="must">Must use to learn: board state as a flat <code>Map</code>/array keyed by index (not a 100×100 nested array you clone whole); a win check that, from the <b>just-placed cell</b>, counts outward along the 4 axes (—, |, ╲, ╱) until the run breaks — <b>O(K) per move, independent of N</b>; derived turn/winner; a memoized <code>&lt;Cell&gt;</code> (<code>React.memo</code>) with a stable <code>key</code> and a stable <code>onClick</code> so unchanged cells skip re-render; shadcn <code>Dialog</code> (compound) for the win banner; number inputs for N and K.</p>
   <p class="must">▸ Algorithm note (the core lesson): the naive win check is O(N²) per move — fine at 3×3, fatal at 100×100 (10k cells × every move). The move only changes outcomes on the 4 lines through it, so check only those: walk each direction counting same-colour stones until you hit a gap, sum the two arms + 1, compare to K. That's ~4·K reads. Separately, the <em>render</em> must stay cheap: a cloned 100×100 array per move + 10k un-memoized cells will jank even with an O(K) check — this is where you learn compute vs. render are different budgets.</p>
@@ -233,11 +236,11 @@
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>You can state, for a single move, which components re-render and justify each.</li>
-    <li>Nothing re-renders that didn't need to — proven in the Profiler, not assumed.</li>
-    <li>An imperative concern (animation, focus, measuring a node) is handled without forcing a re-render.</li>
-    <li>Shared state (theme or current player) reaches deep components without prop-drilling, and you know what it costs in re-renders.</li>
-    <li>Fully operable and announced by keyboard and screen reader; routed via URL.</li>
+    <li><label><input type="checkbox"><span>You can state, for a single move, which components re-render and justify each.</span></label></li>
+    <li><label><input type="checkbox"><span>Nothing re-renders that didn't need to — proven in the Profiler, not assumed.</span></label></li>
+    <li><label><input type="checkbox"><span>An imperative concern (animation, focus, measuring a node) is handled without forcing a re-render.</span></label></li>
+    <li><label><input type="checkbox"><span>Shared state (theme or current player) reaches deep components without prop-drilling, and you know what it costs in re-renders.</span></label></li>
+    <li><label><input type="checkbox"><span>Fully operable and announced by keyboard and screen reader; routed via URL.</span></label></li>
   </ul></div>
   <p class="must">Must use to learn: a deliberate <code>useMemo</code>/<code>useCallback</code> you can prove earns its place; a <code>useRef</code> for an imperative task (focus or measure); an effect with cleanup for the drop animation; a <strong>Context provider</strong> for theme or current-player (observe which consumers re-render); at least one place you deliberately <em>avoid</em> an effect by deriving state or using an event handler; TanStack Router for menu → game; ARIA roles + keyboard handlers on the grid, with the win popup rendered through a <strong>portal</strong>.</p>
   <p class="must">▸ TS challenge: write a generic <code>&lt;Grid&lt;T&gt;&gt;</code> (or <code>useGrid&lt;T&gt;</code>) that works for any cell type, so Connect Four and tic-tac-toe share it with no <code>any</code>. The compiler should infer the cell type from the data you pass in.</p>
@@ -282,10 +285,10 @@
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>The server owns the word and scoring (obvious to you — just build it).</li>
-    <li>The UI distinctly represents loading, error, and success for every call — no flashes of wrong state, no stuck spinners.</li>
-    <li>A slow then fast request can't render out of order.</li>
-    <li>The word list is data, static-site-ready for week 6.</li>
+    <li><label><input type="checkbox"><span>The server owns the word and scoring (obvious to you — just build it).</span></label></li>
+    <li><label><input type="checkbox"><span>The UI distinctly represents loading, error, and success for every call — no flashes of wrong state, no stuck spinners.</span></label></li>
+    <li><label><input type="checkbox"><span>A slow then fast request can't render out of order.</span></label></li>
+    <li><label><input type="checkbox"><span>The word list is data, static-site-ready for week 6.</span></label></li>
   </ul></div>
   <p class="must">Must use to learn (frontend side): TanStack Query for the guess call, surfacing its loading/error/data states in the UI. The Hono API itself is a translation exercise, not a lesson.</p>
   <p class="must">▸ TS challenge: define the guess-response type once on the server and have the client <em>infer</em> it (Hono's typed client / <code>z.infer</code> from the Zod schema) — no hand-written client type, no drift. This is the exact pattern you'll use to type an LLM's structured output or a tool-call result.</p>
@@ -321,11 +324,11 @@
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>Finishing a game reflects on the leaderboard immediately, then reconciles with the server.</li>
-    <li>If the write fails, the UI rolls back cleanly — no lie left on screen.</li>
-    <li>The settings form validates inline without re-rendering the world on every keystroke.</li>
-    <li>The leaderboard's data logic lives in a reusable hook, not inline in the component.</li>
-    <li>A render-time error in one widget doesn't blank the page; the rest keeps working.</li>
+    <li><label><input type="checkbox"><span>Finishing a game reflects on the leaderboard immediately, then reconciles with the server.</span></label></li>
+    <li><label><input type="checkbox"><span>If the write fails, the UI rolls back cleanly — no lie left on screen.</span></label></li>
+    <li><label><input type="checkbox"><span>The settings form validates inline without re-rendering the world on every keystroke.</span></label></li>
+    <li><label><input type="checkbox"><span>The leaderboard's data logic lives in a reusable hook, not inline in the component.</span></label></li>
+    <li><label><input type="checkbox"><span>A render-time error in one widget doesn't blank the page; the rest keeps working.</span></label></li>
   </ul></div>
   <p class="must">Must use to learn: <code>useQuery</code> + <code>useMutation</code> with explicit cache keys and invalidation; one optimistic update with rollback; a <strong>custom hook</strong> (e.g. <code>useLeaderboard()</code>) that encapsulates the query + mutation and returns a clean API; a <code>react-hook-form</code> form (notice the uncontrolled design and why); a <strong>Suspense boundary and an error boundary scoped to one panel</strong> so its loading/failure is isolated; a shared Hono RPC type.</p>
   <p class="must">▸ Modern-React note: React 19 added <strong>Actions</strong> and the hooks that formalize exactly what you're hand-building this week — <code>useOptimistic</code> (optimistic state + rollback), <code>useActionState</code> and <code>&lt;form action&gt;</code> (pending/error plumbing), and <code>use()</code> (read a promise or context in render). Build the leaderboard once the manual way to understand the lifecycle, then re-implement the optimistic update with <code>useOptimistic</code> and compare. Knowing both is the point — fde-one and AppKit may use either.</p>
@@ -365,10 +368,10 @@
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>The dashboard holds several panels that stay aligned and readable from mobile to wide screen.</li>
-    <li>Nothing overflows, collides, or stretches awkwardly when the viewport changes.</li>
-    <li>Charts are legible and sized to their container, not fixed pixels.</li>
-    <li>It deploys to a shareable Databricks App URL (mechanical for you).</li>
+    <li><label><input type="checkbox"><span>The dashboard holds several panels that stay aligned and readable from mobile to wide screen.</span></label></li>
+    <li><label><input type="checkbox"><span>Nothing overflows, collides, or stretches awkwardly when the viewport changes.</span></label></li>
+    <li><label><input type="checkbox"><span>Charts are legible and sized to their container, not fixed pixels.</span></label></li>
+    <li><label><input type="checkbox"><span>It deploys to a shareable Databricks App URL (mechanical for you).</span></label></li>
   </ul></div>
   <p class="must">Must use to learn: a CSS grid for the panel layout; flexbox within panels; a responsive breakpoint that reflows rather than scrolls; a recharts chart sized by its container; a sonner toast. Build/deploy via your own <code>entrypoint.sh</code> + <code>app.yml</code> — translate your existing knowledge.</p>
 
@@ -404,10 +407,10 @@
 
   <h4 class="learn">Game — success criteria</h4>
   <div class="criteria"><ul>
-    <li>A game that worked on Hono works identically on AppKit, with the hand-rolled plumbing gone.</li>
-    <li>Data access goes through AppKit's typed layer / Lakebase plugin instead of your own <code>pg</code> wiring.</li>
-    <li>You can point at each thing you deleted and name the Hono code AppKit replaced.</li>
-    <li>You have a clear-eyed take on where AppKit helped and where it got in the way.</li>
+    <li><label><input type="checkbox"><span>A game that worked on Hono works identically on AppKit, with the hand-rolled plumbing gone.</span></label></li>
+    <li><label><input type="checkbox"><span>Data access goes through AppKit's typed layer / Lakebase plugin instead of your own <code>pg</code> wiring.</span></label></li>
+    <li><label><input type="checkbox"><span>You can point at each thing you deleted and name the Hono code AppKit replaced.</span></label></li>
+    <li><label><input type="checkbox"><span>You have a clear-eyed take on where AppKit helped and where it got in the way.</span></label></li>
   </ul></div>
   <p class="must">Must use to learn: AppKit's routing + data plugin (Lakebase) in place of your Hono routes and <code>pg</code> calls; at least one <code>appkit-ui</code> component; a short written comparison (what was deleted, what you lost control over). The migration itself is the lesson — don't add new game features.</p>
 
@@ -473,3 +476,12 @@
   <p>Games are built on bare <b>Hono</b> through week 5 to learn the primitives, then week 6 migrates to <b>AppKit</b> so the abstraction is visible after you've done it by hand. fde-one's end state is AppKit — officially supported, no bespoke stack to maintain. The intermediate Hono work on fde-one (weeks 3–5) is an intentional rehearsal, not throwaway, since it's what makes AppKit legible. Still worth a <code>#fde-one-dev</code> heads-up before the fde-one cutover PR lands.</p>
 
 </div>
+
+<script>
+  // Persist success-criteria checkboxes across reloads.
+  document.querySelectorAll('.criteria input[type=checkbox]').forEach((box, i) => {
+    const key = 'syllabus-criteria-' + i;
+    box.checked = localStorage.getItem(key) === '1';
+    box.addEventListener('change', () => localStorage.setItem(key, box.checked ? '1' : '0'));
+  });
+</script>

@@ -1,6 +1,8 @@
 import "../style.css";
 import { n } from "./game";
-import { createBoard } from "./board";
+import { createFullBoard } from "./board";
+import { Game } from "./game"
 
-const board = createBoard(n);
+const game = new Game();
+const board = createFullBoard(n, game);
 document.body.append(board);

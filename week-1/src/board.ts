@@ -1,51 +1,57 @@
-import { createSquare } from "./components";
-import { Game } from "./game";
+import type { Mark } from "./types";
 
-function createOverlay(game: Game): {element: HTMLDivElement, handleWinner: (winner: "X" | "O") => void} {
-  // create hidable/mutable element
-  const overlay = document.createElement('div');
-  overlay.className = 'winner-overlay'
-  overlay.hidden = true
+// Pure UI: nothing in this file knows about Game. The parent (main.ts) owns
+// state and wires these pieces together through callbacks.
+
+type MoveResult = { mark: Mark; winner: boolean };
+
+function createSquare(row: number, col: number): HTMLDivElement {
+  const square = document.createElement("div");
+  square.className = `square ${(row + col) % 2 === 1 ? "light" : "dark"}`;
+  return square;
+}
+
+export function createOverlay(onReset: () => void): {
+  element: HTMLDivElement;
+  show: (winner: Mark) => void;
+} {
+  const overlay = document.createElement("div");
+  overlay.className = "winner-overlay";
+  overlay.hidden = true;
 
   const message = document.createElement("h2");
-  const close = document.createElement("button");
-  close.textContent = 'x';
-  close.addEventListener('click', () => { overlay.hidden = true})
 
-  const reset = document.createElement('button')
-  reset.textContent = 'Reset game'
-  reset.addEventListener('click', () => {
-    game.reset()
-    overlay.hidden = true
-    //hacking this
-    const board = document.getElementById("game-board")
-    if (!board) return;
-    for (const square of board.children) {
-      square.textContent = ""
-    }
-  })
+  const close = document.createElement("button");
+  close.textContent = "x";
+  close.addEventListener("click", () => {
+    overlay.hidden = true;
+  });
+
+  const reset = document.createElement("button");
+  reset.textContent = "Reset game";
+  reset.addEventListener("click", () => {
+    onReset();
+    overlay.hidden = true;
+  });
 
   const panel = document.createElement("div");
   panel.className = "winner-panel";
   panel.append(close, message, reset);
   overlay.append(panel);
 
+  function show(winner: Mark) {
+    message.textContent = `Winner: ${winner}`;
+    overlay.hidden = false;
+  }
 
-  // callbacks to manage state
-  function handleWinner(winner: "X" | "O" | null) {
-    if (winner != null) {
-      message.textContent = `Winner: ${winner}`
-      overlay.hidden = false
-      
-    } else if (!overlay.hidden) {
-      overlay.hidden = true
-    }
-  } 
-
-  return { element: overlay, handleWinner: handleWinner}
+  return { element: overlay, show };
 }
 
-function createBoard(n: number, game: Game, handleWinner: (winner: "X" | "O") => void): HTMLDivElement {
+export function createBoard(
+  n: number,
+  onMove: (row: number, col: number) => MoveResult,
+  onWinner: (winner: Mark) => void,
+): { element: HTMLDivElement; clear: () => void } {
   const board = document.createElement("div");
   board.style.display = "grid";
   board.style.gridTemplateColumns = `repeat(${n}, 60px)`;
@@ -53,34 +59,19 @@ function createBoard(n: number, game: Game, handleWinner: (winner: "X" | "O") =>
   for (let row = 0; row < n; row++) {
     for (let col = 0; col < n; col++) {
       const square = createSquare(row, col);
-      square.style.gridRow = String(row + 1);
-      square.style.gridColumn = String(col + 1);
       square.addEventListener("click", () => {
-        const result = game.play(row, col)
-        square.textContent = result.mark
-        if (result.winner) {
-          handleWinner(result.mark)
-
-        }
+        const result = onMove(row, col);
+        if (result.mark === null) return; // square already taken
+        square.textContent = result.mark;
+        if (result.winner) onWinner(result.mark);
       });
       board.append(square);
     }
   }
-  return board;
-}
 
-export function createFullBoard(n: number, game: Game) {
-  // parent that's in charge of managing callbacks and hiding/showing the overlay
-  const wrapper = document.createElement('div')
-  wrapper.className = 'board-wrapper'
+  function clear() {
+    for (const square of board.children) square.textContent = "";
+  }
 
-  // children of the wrapper that react to callbacks
-  const overlay = createOverlay(game)
-  const board = createBoard(n, game, overlay.handleWinner)
-  board.id = "game-board"
-
-  wrapper.append(board, overlay.element)
-
-  return wrapper
-
+  return { element: board, clear };
 }

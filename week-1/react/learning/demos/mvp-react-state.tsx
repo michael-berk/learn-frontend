@@ -1,3 +1,7 @@
+/*
+Key points
+- useState returns a getter (in the form of a variable name) and setter. Use this to manage state
+*/
 import { useState } from "react";
 
 export default function App() {

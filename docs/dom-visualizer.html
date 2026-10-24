@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How the DOM works: a guided walkthrough</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #fafafa; --fg: #1a1a1a; --muted: #6a6a6a; --line: #dcdcdc; --panel: #fff; --code: #f3f3f3;
+    --accent: #0b5fff; --accent-soft: rgba(11, 95, 255, .12);
+    --green: #0a7d4a; --green-soft: rgba(10, 125, 74, .14);
+    --yellow: #b07800; --yellow-soft: rgba(255, 196, 0, .28);
+    --red: #c0392b; --red-soft: rgba(192, 57, 43, .14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131313; --fg: #e8e8e8; --muted: #9c9c9c; --line: #333; --panel: #1c1c1c; --code: #232323;
+      --accent: #6ea8ff; --accent-soft: rgba(110, 168, 255, .18);
+      --green: #4fc98a; --green-soft: rgba(79, 201, 138, .16);
+      --yellow: #f0c050; --yellow-soft: rgba(240, 192, 80, .22);
+      --red: #ff7b6b; --red-soft: rgba(255, 123, 107, .16);
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+  .wrap { max-width: 1180px; margin: auto; padding: 22px 18px 40px; }
+  .mono, .line, .node { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* Header + progress */
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 1.35rem; margin: 0; }
+  .part { color: var(--accent); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; }
+  .dots { display: flex; gap: 6px; margin: 12px 0 16px; flex-wrap: wrap; align-items: center; }
+  .dot { width: 26px; height: 6px; border-radius: 3px; background: var(--line); border: 0; cursor: pointer; padding: 0; }
+  .dot.done { background: var(--accent-soft); }
+  .dot.on { background: var(--accent); }
+  .dot-gap { width: 14px; }
+
+  /* Narration */
+  .story { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
+           display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; }
+  .story h2 { margin: 0 0 4px; font-size: 1.25rem; }
+  .story p { margin: 0; max-width: 75ch; }
+  .story ul { margin: 6px 0 0; padding-left: 20px; }
+  .story code { background: var(--code); padding: .05em .35em; border-radius: 4px; font-size: .88em; }
+  .controls { display: flex; gap: 8px; }
+  .btn { font: inherit; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn:disabled { opacity: .35; cursor: default; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .fade-in { animation: fadeUp .45s ease-out; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } }
+
+  /* Stage */
+  .stage { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 14px; }
+  @media (max-width: 920px) { .stage, .story { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; position: relative; }
+  .panel h3 { margin: 0 0 12px; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .flow { position: absolute; right: -13px; top: 50%; z-index: 2; color: var(--muted); font-size: 1.1rem; }
+  @media (max-width: 920px) { .flow { display: none; } }
+  .empty { color: var(--muted); font-style: italic; font-size: .9rem; }
+
+  /* Left: code */
+  .line { font-size: .82rem; white-space: pre; padding: 1px 8px; border-left: 3px solid transparent; border-radius: 0 4px 4px 0; transition: background .3s; min-height: 1.5em; }
+  .line.reading { background: var(--accent-soft); border-left-color: var(--accent); }
+  .line.hl { background: var(--accent-soft); border-left-color: var(--accent); }
+  .line.new { background: var(--green-soft); border-left-color: var(--green); }
+  .line.bad { background: var(--red-soft); border-left-color: var(--red); color: var(--red); }
+  .line.dim { opacity: .45; }
+  .line.new, .line.bad, .line.hl { animation: fadeUp .4s ease-out; }
+
+  /* Middle: tree */
+  .tree { position: relative; height: 430px; }
+  .tree svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .tree path { fill: none; stroke: var(--line); stroke-width: 1.5; transition: d .6s ease, opacity .3s; }
+  .node { position: absolute; font-size: .8rem; padding: 3px 10px; border: 1.5px solid var(--line); border-radius: 6px;
+          background: var(--panel); white-space: nowrap; transition: top .6s ease, left .6s ease, opacity .35s, background .3s, border-color .3s; cursor: default; }
+  .node.el { color: var(--accent); }
+  .node.text { color: var(--green); border-style: dashed; border-radius: 12px; }
+
+  /* Right: page */
+  .page { position: relative; height: 230px; border: 1px dashed var(--line); border-radius: 8px; margin: 0; }
+  .pitem { position: absolute; left: 12px; right: 12px; padding: 0 6px; border-radius: 5px; transition: top .6s ease, opacity .35s, background .3s, outline-color .3s;
+           outline: 2px solid transparent; outline-offset: 1px; }
+  .pitem.h1 { font-size: 1.4rem; font-weight: 700; }
+  .pitem.li { padding-left: 24px; }
+  .pitem.li::before { content: "•"; position: absolute; left: 10px; }
+  .pitem.p { color: var(--muted); }
+
+  /* Shared animation states */
+  .hidden { opacity: 0 !important; }
+  .enter { animation: pop .45s cubic-bezier(.2, 1.4, .5, 1); }
+  @keyframes pop { from { opacity: 0; transform: scale(.6); } }
+  .leave { opacity: 0 !important; }
+  .mark-hl { border-color: var(--accent); background: var(--accent-soft); outline-color: var(--accent); }
+  .mark-new { border-color: var(--green); background: var(--green-soft); outline-color: var(--green); animation: pop .45s cubic-bezier(.2, 1.4, .5, 1), glow 1.6s ease-out .2s; }
+  .mark-changed { border-color: var(--yellow); background: var(--yellow-soft); outline-color: var(--yellow); animation: flash 1.2s ease-out; }
+  .mark-moved { border-color: var(--accent); background: var(--accent-soft); outline-color: var(--accent); }
+  .mark-same { opacity: .32; }
+  .mark-error { border-color: var(--red); background: var(--red-soft); outline-color: var(--red); color: var(--red); animation: shake .5s ease-in-out .3s; }
+  .link { outline: 2px solid var(--accent) !important; outline-offset: 2px; opacity: 1 !important; }
+  @keyframes glow { 0% { box-shadow: 0 0 0 0 var(--green); } 100% { box-shadow: 0 0 0 10px transparent; } }
+  @keyframes flash { 0%, 30% { background: var(--yellow); } }
+  @keyframes shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+
+  .banner { margin-top: 12px; padding: 8px 12px; border-radius: 8px; font-size: .88rem; background: var(--accent-soft); border-left: 3px solid var(--accent);
+            animation: fadeUp .45s ease-out .5s both; }
+  .banner.bad { background: var(--red-soft); border-left-color: var(--red); }
+  .banner.good { background: var(--green-soft); border-left-color: var(--green); }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 14px; font-size: .8rem; color: var(--muted); }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; border: 1.5px solid; }
+  .lg-new::before { border-color: var(--green) !important; background: var(--green-soft); }
+  .lg-chg::before { border-color: var(--yellow) !important; background: var(--yellow-soft); }
+  .lg-mov::before { border-color: var(--accent) !important; background: var(--accent-soft); }
+  .lg-err::before { border-color: var(--red) !important; background: var(--red-soft); }
+  .lg-same::before { border-color: var(--line) !important; opacity: .4; }
+  .keys { color: var(--muted); font-size: .8rem; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>How the DOM works <span class="part" id="part"></span></h1>
+    <span class="mono" style="color:var(--muted);font-size:.85rem" id="count"></span>
+  </header>
+  <div class="dots" id="dots"></div>
+
+  <div class="story">
+    <div id="narration"></div>
+    <div class="controls">
+      <button class="btn" id="back">← Back</button>
+      <button class="btn" id="replay" title="Replay this step's animation">↻</button>
+      <button class="btn primary" id="next">Next →</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="panel"><h3 id="t-left"></h3><div id="left"></div><div id="b-left"></div><span class="flow">→</span></div>
+    <div class="panel"><h3 id="t-tree"></h3><div class="tree" id="tree"><svg id="wires"></svg></div><div id="b-tree"></div><span class="flow">→</span></div>
+    <div class="panel"><h3 id="t-page"></h3><div class="page" id="page"></div><div id="b-page"></div></div>
+  </div>
+
+  <div class="legend">
+    <span class="lg-new">new</span><span class="lg-chg">changed</span><span class="lg-mov">moved / highlighted</span>
+    <span class="lg-err">bug</span><span class="lg-same">untouched</span>
+  </div>
+  <div class="keys">Keyboard: ← / → to step. Hover any box in the tree or on the page to see its match.</div>
+</div>
+
+<script>
+// ───────────────────────── Scene builders ─────────────────────────
+// A model is the "data"; tree() and page() turn it into what each panel shows.
+const base = { title: "My List", items: [{ id: 1, text: "Apples" }, { id: 2, text: "Bread" }] };
+const withMilk = { ...base, items: [...base.items, { id: 3, text: "Milk" }] };
+const renamed = { ...withMilk, title: "Groceries" };
+const reversed = { ...withMilk, items: [...withMilk.items].reverse() };
+
+const HTML_LINE = { root: 0, h1: 1, h1t: 1, ul: 2, li1: 3, li1t: 3, li2: 4, li2t: 4, p: 6, pt: 6 };
+
+function tree(m, { marks = {}, rest, react = false, count } = {}) {
+  const out = [];
+  const add = (id, depth, label, kind, link = id) =>
+    out.push({ id, depth, label, kind, link, line: HTML_LINE[id], mark: marks[id] ?? rest });
+  add("root", 0, react ? "App()" : "<body>", "el");
+  add("h1", 1, "<h1>", "el");
+  add("h1t", 2, `"${m.title}"`, "text", "h1");
+  add("ul", 1, "<ul>", "el");
+  for (const i of m.items) {
+    add(`li${i.id}`, 2, react ? `<li key=${i.id}>` : "<li>", "el");
+    add(`li${i.id}t`, 3, `"${i.text}"`, "text", `li${i.id}`);
+  }
+  add("p", 1, "<p>", "el");
+  add("pt", 2, `"Items: ${count ?? m.items.length}"`, "text", "p");
+  return out;
+}
+
+function page(m, { marks = {}, rest, count } = {}) {
+  const mk = id => marks[id] ?? marks[id + "t"] ?? rest;
+  return [
+    { id: "h1", tag: "h1", text: m.title, mark: mk("h1") },
+    ...m.items.map(i => ({ id: `li${i.id}`, tag: "li", text: i.text, mark: mk(`li${i.id}`) })),
+    { id: "p", tag: "p", text: `Items: ${count ?? m.items.length}`, mark: mk("p") },
+  ];
+}
+
+const L = (t, c) => ({ t, c });
+const HTML = ["<body>", "  <h1>My List</h1>", "  <ul>", "    <li>Apples</li>", "    <li>Bread</li>", "  </ul>", "  <p>Items: 2</p>", "</body>"].map(t => L(t));
+
+const REACT_CODE = (stateLine, extra = []) => [
+  L("// state: the only thing you change"),
+  stateLine,
+  L(""),
+  L("function App() {", "dim"),
+  L("  return <>", "dim"),
+  L("    <h1>{title}</h1>", "dim"),
+  L("    <ul>{items.map(i =>", "dim"),
+  L("      <li key={i.id}>{i.text}</li>)}", "dim"),
+  L("    </ul>", "dim"),
+  L("    <p>Items: {items.length}</p>", "dim"),
+  L("  </>", "dim"),
+  L("}", "dim"),
+  ...extra,
+];
+const stateOf = m => `const items = [${m.items.map(i => `"${i.text}"`).join(", ")}]`;
+
+const P1 = ["HTML (text from the server)", "DOM tree (objects in memory)", "Page (pixels on screen)"];
+const P1js = ["Your JavaScript", P1[1], P1[2]];
+const P2 = ["State + your component", "Virtual tree (React's plan)", "Page (real DOM)"];
+
+// ───────────────────────── The story ─────────────────────────
+const steps = [
+  { part: "Part 1 · The DOM", titles: P1,
+    h: "The browser receives HTML",
+    p: "HTML is just <b>text</b>. The browser can't draw angle brackets directly. First it has to work out the structure: what's inside what.",
+    left: HTML, tree: [], page: [] },
+
+  { part: "Part 1 · The DOM", titles: P1, stagger: "tree",
+    h: "Parsing turns text into a tree",
+    p: "The browser reads the HTML line by line and creates <b>one object per tag and per piece of text</b>. Nesting becomes parent → child. This tree of objects is the <b>DOM</b> (Document Object Model).",
+    left: HTML, tree: tree(base), page: [] },
+
+  { part: "Part 1 · The DOM", titles: P1,
+    h: "Two kinds of nodes",
+    p: "Solid boxes like <code>&lt;ul&gt;</code> are <b>element nodes</b>. The dashed green ones are <b>text nodes</b>: text is its own node, a child of its element. When you call <code>h1.textContent = …</code>, it's that child you're replacing.",
+    left: HTML, tree: tree(base, { marks: { h1t: "mark-hl", li1t: "mark-hl", li2t: "mark-hl", pt: "mark-hl" } }), page: [] },
+
+  { part: "Part 1 · The DOM", titles: P1, stagger: "page",
+    h: "The tree gets painted",
+    p: "The browser draws pixels from the <b>tree</b>, not from the HTML. Once the page has loaded, the HTML text doesn't matter any more. The live tree is the source of truth. Hover a box to see its match on both sides.",
+    left: HTML.map(l => L(l.t, "dim")), tree: tree(base), page: page(base) },
+
+  { part: "Part 1 · The DOM", titles: P1js,
+    h: "JavaScript can change the tree",
+    p: "<code>createElement</code> makes a new node. <code>appendChild</code> attaches it to the tree. The browser notices the tree changed and repaints that part of the page.",
+    left: [L('const ul = document.querySelector("ul")'), L('const li = document.createElement("li")', "new"), L('li.textContent = "Milk"', "new"), L("ul.appendChild(li)", "new")],
+    tree: tree(withMilk, { count: 2, marks: { li3: "mark-new", li3t: "mark-new" } }),
+    page: page(withMilk, { count: 2, marks: { li3: "mark-new" } }) },
+
+  { part: "Part 1 · The DOM", titles: P1js,
+    h: "Changing text",
+    p: "Same idea: find the node, change it. <code>textContent</code> swaps out the h1's text node, and only the heading repaints.",
+    left: [L('const ul = document.querySelector("ul")', "dim"), L('const li = document.createElement("li")', "dim"), L('li.textContent = "Milk"', "dim"), L("ul.appendChild(li)", "dim"), L(""), L('const h1 = document.querySelector("h1")'), L('h1.textContent = "Groceries"', "new")],
+    tree: tree(renamed, { count: 2, marks: { h1t: "mark-changed" } }),
+    page: page(renamed, { count: 2, marks: { h1: "mark-changed" } }) },
+
+  { part: "Part 1 · The DOM", titles: P1js,
+    h: "The catch: keeping things in sync is your job",
+    p: "Count the items: there are <b>3</b>, but the counter still says <b>2</b>. Nothing ties your data to the screen, so every handler has to remember every node that depends on it. With a 100×100 board, that's impossible to keep straight. <b>This is the problem React solves.</b>",
+    left: [L('const li = document.createElement("li")', "dim"), L('li.textContent = "Milk"', "dim"), L("ul.appendChild(li)", "dim"), L('h1.textContent = "Groceries"', "dim"), L(""), L('// forgot: p.textContent = "Items: 3"', "bad")],
+    tree: tree(renamed, { count: 2, marks: { pt: "mark-error" } }),
+    page: page(renamed, { count: 2, marks: { p: "mark-error" } }),
+    banners: { page: ["bad", "3 items on screen ≠ “Items: 2”. The UI is lying."] } },
+
+  { part: "Part 2 · React", titles: P2,
+    h: "React flips it: UI = f(state)",
+    p: "In React you <b>never touch the DOM</b>. You keep data in <b>state</b> and write a function that returns what the UI <em>should</em> look like for that state. Updating the real DOM is React's job.",
+    left: REACT_CODE(L(stateOf(base), "hl")),
+    tree: tree(base, { react: true }), page: page(base) },
+
+  { part: "Part 2 · React", titles: P2,
+    h: "① You change state",
+    p: "A click calls <code>setItems</code> with a <b>new</b> array that includes Milk. That's all your code does. It doesn't touch the tree or the page.",
+    left: REACT_CODE(L(stateOf(withMilk), "new"), [L(""), L('setItems([...items, "Milk"])', "new")]),
+    tree: tree(base, { react: true, rest: "mark-same" }), page: page(base),
+    banners: { tree: ["", "Nothing has changed on screen yet. React has only been told that state changed."] } },
+
+  { part: "Part 2 · React", titles: P2, stagger: "tree",
+    h: "② React calls your function again",
+    p: "React re-runs <code>App()</code> with the new state and gets a <b>brand-new virtual tree</b>. It's just plain JS objects, so building it is cheap. The real page still shows the old version.",
+    left: REACT_CODE(L(stateOf(withMilk), "hl"), [L(""), L("// React: newTree = App()", "hl")]),
+    tree: tree(withMilk, { react: true }), page: page(base) },
+
+  { part: "Part 2 · React", titles: P2,
+    h: "③ Diff: compare new tree vs. old tree",
+    p: "React walks both trees side by side. Most of it is identical (faded). It finds exactly <b>one new &lt;li&gt;</b> and <b>one changed piece of text</b>.",
+    left: REACT_CODE(L(stateOf(withMilk), "hl"), [L(""), L("// React: diff(oldTree, newTree)", "hl")]),
+    tree: tree(withMilk, { react: true, rest: "mark-same", marks: { li3: "mark-new", li3t: "mark-new", pt: "mark-changed" } }), page: page(base),
+    banners: { tree: ["", "Diff result: +1 node, ~1 text. Everything else stays."] } },
+
+  { part: "Part 2 · React", titles: P2,
+    h: "④ Patch only the differences",
+    p: "React makes just those 2 changes to the real DOM. Notice that <b>“Items: 3” is correct on its own</b>. It's <em>derived</em> from <code>items.length</code> during render, so it can't go stale. Compare with the bug a few steps back.",
+    left: REACT_CODE(L(stateOf(withMilk), "hl")),
+    tree: tree(withMilk, { react: true, rest: "mark-same", marks: { li3: "mark-new", li3t: "mark-new", pt: "mark-changed" } }),
+    page: page(withMilk, { rest: "mark-same", marks: { li3: "mark-new", p: "mark-changed" } }),
+    banners: { page: ["good", "2 DOM operations. The count is derived, so it's always right."] } },
+
+  { part: "Part 2 · React", titles: P2,
+    h: "Keys: move, don't rebuild",
+    p: "Reverse the list. Each <code>&lt;li&gt;</code> has a <code>key</code>, so React recognises it as the <b>same item in a new position</b>. It <em>moves</em> the existing nodes instead of destroying and recreating them. Watch them slide.",
+    left: REACT_CODE(L(stateOf(reversed), "new"), [L(""), L("setItems([...items].reverse())", "new")]),
+    tree: tree(reversed, { react: true, rest: "mark-same", marks: { li1: "mark-moved", li2: "mark-moved", li3: "mark-moved" } }),
+    page: page(reversed, { rest: "mark-same", marks: { li1: "mark-moved", li2: "mark-moved", li3: "mark-moved" } }) },
+
+  { part: "Part 2 · React", titles: P2,
+    h: "Gotcha: mutating state does nothing",
+    p: "React decides whether anything changed by checking <b>if it's the same object</b> (<code>old === new</code>). <code>push</code> changes the array in place, so the reference is the same and React <b>skips the update without any error</b>. Always build a new one: <code>setItems([...items, \"Eggs\"])</code>.",
+    left: REACT_CODE(L(stateOf(reversed), "dim"), [L(""), L('items.push("Eggs")', "bad"), L("setItems(items)  // same array!", "bad")]),
+    tree: tree(reversed, { react: true, rest: "mark-same" }), page: page(reversed, { rest: "mark-same" }),
+    banners: { tree: ["bad", "oldItems === newItems → “nothing changed” → no render, no diff, no patch."] } },
+
+  { part: "Recap", titles: P2,
+    h: "Recap → your tic-tac-toe",
+    p: `<ul>
+      <li><b>DOM</b> = the live tree of objects the browser paints from.</li>
+      <li><b>Vanilla JS</b>: you update nodes by hand, and things drift out of sync (step 7).</li>
+      <li><b>React</b>: state → render → diff → patch. You only touch state.</li>
+      <li>For your board: what is the <em>state</em>? What can be <em>derived</em> (turn? winner?)? Which nodes should a single click patch?</li>
+    </ul>`,
+    left: REACT_CODE(L(stateOf(reversed), "hl")),
+    tree: tree(reversed, { react: true }), page: page(reversed) },
+];
+
+// ───────────────────────── Rendering engine ─────────────────────────
+const $ = id => document.getElementById(id);
+const ROW = 34, IND = 30;
+const PAGE_H = { h1: 46, li: 30, p: 36 };
+const treeEls = new Map(), wireEls = new Map(), pageEls = new Map();
+let timers = [], cur = 0;
+const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+
+function linkHover(el, link) {
+  el.dataset.link = link;
+  el.onmouseenter = () => document.querySelectorAll(`[data-link="${el.dataset.link}"]`).forEach(x => x.classList.add("link"));
+  el.onmouseleave = () => document.querySelectorAll(".link").forEach(x => x.classList.remove("link"));
+}
+
+function clear(map) { map.forEach(el => el.remove()); map.clear(); }
+
+function remark(el, baseClass, mark) {
+  el.className = baseClass;
+  void el.offsetWidth; // restart CSS animations
+  if (mark) el.classList.add(mark);
+}
+
+function drawLeft(lines) {
+  const box = $("left");
+  box.textContent = "";
+  lines.forEach(l => {
+    const d = document.createElement("div");
+    d.className = "line " + (l.c || "");
+    d.textContent = l.t;
+    box.appendChild(d);
+  });
+}
+
+function drawTree(nodes, stagger) {
+  const box = $("tree"), svg = $("wires");
+  if (stagger) { clear(treeEls); clear(wireEls); }
+  const seen = new Set();
+  const lastAtDepth = [];
+  nodes.forEach((n, k) => {
+    seen.add(n.id);
+    lastAtDepth[n.depth] = k;
+    let el = treeEls.get(n.id);
+    const isNew = !el;
+    const top = k * ROW, left = n.depth * IND;
+    if (isNew) {
+      el = document.createElement("div");
+      el.style.top = top + "px"; el.style.left = left + "px";
+      box.appendChild(el); treeEls.set(n.id, el);
+    }
+    linkHover(el, n.link);
+    el.textContent = n.label;
+    remark(el, `node ${n.kind}`, n.mark);
+    el.style.top = top + "px"; el.style.left = left + "px";
+
+    // Wire from parent (closest earlier node one level up) to this node
+    let wire = wireEls.get(n.id);
+    if (n.depth > 0) {
+      const pk = lastAtDepth[n.depth - 1];
+      const d = `M ${(n.depth - 1) * IND + 12} ${pk * ROW + 26} V ${top + 13} H ${left}`;
+      if (!wire) { wire = document.createElementNS("http://www.w3.org/2000/svg", "path"); svg.appendChild(wire); wireEls.set(n.id, wire); }
+      wire.setAttribute("d", d); wire.style.d = `path("${d}")`;
+      wire.style.opacity = n.mark === "mark-same" ? .35 : 1;
+    }
+
+    if (isNew && stagger) {
+      el.classList.add("hidden"); wire?.classList.add("hidden");
+      later(300 + k * 380, () => {
+        el.classList.remove("hidden"); el.classList.add("enter"); wire?.classList.remove("hidden");
+        document.querySelectorAll("#left .reading").forEach(x => x.classList.remove("reading"));
+        if (n.line != null) $("left").children[n.line]?.classList.add("reading");
+      });
+    } else if (isNew && !n.mark) el.classList.add("enter");
+  });
+  if (stagger) later(300 + nodes.length * 380, () => document.querySelectorAll("#left .reading").forEach(x => x.classList.remove("reading")));
+  for (const [id, el] of treeEls) if (!seen.has(id)) { el.classList.add("leave"); treeEls.delete(id); setTimeout(() => el.remove(), 400); }
+  for (const [id, w] of wireEls) if (!seen.has(id)) { w.remove(); wireEls.delete(id); }
+}
+
+function drawPage(items, stagger) {
+  const box = $("page");
+  if (stagger) clear(pageEls);
+  const seen = new Set();
+  let y = 10;
+  items.forEach((it, k) => {
+    seen.add(it.id);
+    let el = pageEls.get(it.id);
+    const isNew = !el;
+    if (isNew) { el = document.createElement("div"); el.style.top = y + "px"; box.appendChild(el); pageEls.set(it.id, el); }
+    linkHover(el, it.id);
+    el.textContent = it.text;
+    remark(el, `pitem ${it.tag}`, it.mark);
+    el.style.top = y + "px";
+    if (isNew && stagger) { el.classList.add("hidden"); later(300 + k * 420, () => { el.classList.remove("hidden"); el.classList.add("enter"); }); }
+    else if (isNew && !it.mark) el.classList.add("enter");
+    y += PAGE_H[it.tag];
+  });
+  for (const [id, el] of pageEls) if (!seen.has(id)) { el.classList.add("leave"); pageEls.delete(id); setTimeout(() => el.remove(), 400); }
+}
+
+function drawBanners(b = {}) {
+  for (const k of ["left", "tree", "page"]) {
+    const box = $("b-" + k);
+    box.textContent = "";
+    if (b[k]) { const d = document.createElement("div"); d.className = "banner " + b[k][0]; d.textContent = b[k][1]; box.appendChild(d); }
+  }
+}
+
+function emptyHint(id, show, text) {
+  let hint = $(id).querySelector(".empty");
+  if (show && !hint) { hint = document.createElement("div"); hint.className = "empty"; hint.style.padding = "10px"; hint.textContent = text; $(id).appendChild(hint); }
+  if (!show && hint) hint.remove();
+}
+
+function go(i) {
+  timers.forEach(clearTimeout); timers = [];
+  const prevPart = steps[cur]?.part;
+  cur = Math.max(0, Math.min(steps.length - 1, i));
+  const s = steps[cur];
+  // A new part starts with a fresh stage, so the tree/page don't morph across parts
+  if (prevPart !== s.part && s.part !== "Recap") { clear(treeEls); clear(wireEls); clear(pageEls); }
+
+  $("part").textContent = "· " + s.part;
+  $("count").textContent = `step ${cur + 1} / ${steps.length}`;
+  const nar = $("narration");
+  nar.innerHTML = `<h2></h2><p>${s.p}</p>`;
+  nar.querySelector("h2").textContent = s.h;
+  nar.classList.remove("fade-in"); void nar.offsetWidth; nar.classList.add("fade-in");
+  ["t-left", "t-tree", "t-page"].forEach((id, k) => $(id).textContent = s.titles[k]);
+
+  drawLeft(s.left);
+  drawTree(s.tree, s.stagger === "tree");
+  drawPage(s.page, s.stagger === "page");
+  drawBanners(s.banners);
+  emptyHint("tree", !s.tree.length, "Empty: the browser hasn't parsed anything yet.");
+  emptyHint("page", !s.page.length, "Blank: nothing to paint yet.");
+
+  $("back").disabled = cur === 0;
+  $("next").disabled = cur === steps.length - 1;
+  $("next").textContent = cur === steps.length - 1 ? "Done ✓" : "Next →";
+  document.querySelectorAll(".dot").forEach((d, k) => { d.classList.toggle("on", k === cur); d.classList.toggle("done", k < cur); });
+}
+
+// Progress dots (a gap between parts)
+steps.forEach((s, k) => {
+  if (k && s.part !== steps[k - 1].part) $("dots").appendChild(Object.assign(document.createElement("span"), { className: "dot-gap" }));
+  const d = document.createElement("button");
+  d.className = "dot"; d.title = s.h; d.onclick = () => go(k);
+  $("dots").appendChild(d);
+});
+
+$("next").onclick = () => go(cur + 1);
+$("back").onclick = () => go(cur - 1);
+$("replay").onclick = () => { const k = cur; clear(treeEls); clear(wireEls); clear(pageEls); if (k > 0) { cur = k - 1; go(k - 1); } setTimeout(() => go(k), k > 0 ? 50 : 0); };
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") go(cur + 1);
+  if (e.key === "ArrowLeft") go(cur - 1);
+});
+go(0);
+</script>
+</body>
+</html>

@@ -4,7 +4,13 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmit": true,
-    "strict": true
+    "strict": true,
+    "types": [
+      "vite/client"
+    ]
   },
-  "include": ["demos"]
+  "include": [
+    "demos",
+    "manual"
+  ]
 }

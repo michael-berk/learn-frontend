@@ -1,6 +1,6 @@
 /*
 Key points
-- Prop: an input a parent passes to a child (e.g. `count` on line 24)
+- Prop: anything a parent passes to a child (e.g. `count` on line 24)
 - A child reports events upwards by calling callbacks it got as props - the parent decides what that behavior should be when passing the action as a prop
 */
 import { useState } from "react";
